@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/constants/app_strings.dart';
 import '../../../core/helpers/responsive_helper.dart';
@@ -45,10 +46,13 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   @override
-  void didUpdateWidget(ContactsPage oldWidget) {
+  void didUpdateWidget(covariant ContactsPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.contacts != widget.contacts) {
-      _filterContacts();
+      setState(() {
+        _filteredContacts = List.from(widget.contacts);
+        _sortContacts();
+      });
     }
   }
 
@@ -70,11 +74,16 @@ class _ContactsPageState extends State<ContactsPage> {
         if (_sortAscending) {
           _filteredContacts = Contact.sortAlphabetically(_filteredContacts);
         } else {
-          _filteredContacts = Contact.sortAlphabetically(_filteredContacts).reversed.toList();
+          _filteredContacts = Contact.sortAlphabetically(
+            _filteredContacts,
+          ).reversed.toList();
         }
         break;
       case 'date':
-        _filteredContacts = Contact.sortByDate(_filteredContacts, ascending: _sortAscending);
+        _filteredContacts = Contact.sortByDate(
+          _filteredContacts,
+          ascending: _sortAscending,
+        );
         break;
       case 'carrier':
         _filteredContacts.sort((a, b) {
@@ -114,16 +123,21 @@ class _ContactsPageState extends State<ContactsPage> {
       ),
       child: Padding(
         padding: EdgeInsets.all(padding),
-        child: Column(
-          children: [
-            _buildStatsSection(isMobile),
-            const SizedBox(height: 20),
-            _buildSearchAndFilters(isMobile),
-            const SizedBox(height: 20),
-            Expanded(
-              child: _buildContactsList(isMobile, crossAxisCount),
+        child: CustomScrollView(
+          slivers:[
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  _buildStatsSection(isMobile),
+                  const SizedBox(height: 20),
+                  _buildSearchAndFilters(isMobile),
+                  const SizedBox(height: 20),
+                  // Expanded(child: _buildContactsList(isMobile, crossAxisCount)),
+                ],
+              ),
             ),
-          ],
+            _buildContactsList(isMobile, crossAxisCount)
+          ]
         ),
       ),
     );
@@ -147,22 +161,26 @@ class _ContactsPageState extends State<ContactsPage> {
   Widget _buildSearchAndFilters(bool isMobile) {
     return Column(
       children: [
-        // شريط البحث
         TextField(
           controller: _searchController,
           decoration: InputDecoration(
             hintText: 'البحث في جهات الاتصال...',
-            prefixIcon: const Icon(Icons.search, color: AppConstants.whatsappGreen),
+            prefixIcon: const Icon(
+              Icons.search,
+              color: AppConstants.whatsappGreen,
+            ),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-              },
-            )
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                    },
+                  )
                 : null,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+              borderRadius: BorderRadius.circular(
+                AppConstants.defaultBorderRadius,
+              ),
               borderSide: BorderSide.none,
             ),
             filled: true,
@@ -182,7 +200,7 @@ class _ContactsPageState extends State<ContactsPage> {
               const SizedBox(width: 8),
               _buildSortButton('carrier', 'الشركة', Icons.network_cell),
               const SizedBox(width: 8),
-              _buildFilterButton(),
+              // _buildFilterButton(),
             ],
           ),
         ),
@@ -247,41 +265,47 @@ class _ContactsPageState extends State<ContactsPage> {
   Widget _buildContactsList(bool isMobile, int crossAxisCount) {
     if (_filteredContacts.isEmpty) {
       if (widget.contacts.isEmpty) {
-        return EmptyStateWidget(
-          icon: Icons.contacts_outlined,
-          title: AppStrings.noContacts,
-          subtitle: AppStrings.startByAddingContacts,
-          actionText: AppStrings.addContact,
-          onActionPressed: _showAddContactDialog,
+        return SliverToBoxAdapter(
+          child: EmptyStateWidget(
+            icon: Icons.contacts_outlined,
+            title: AppStrings.noContacts,
+            subtitle: AppStrings.startByAddingContacts,
+            actionText: AppStrings.addContact,
+            onActionPressed: _showAddContactDialog,
+          ),
         );
       } else {
-        return const EmptyStateWidget(
-          icon: Icons.search_off,
-          title: 'لا توجد نتائج',
-          subtitle: 'جرب تغيير كلمات البحث',
+        return SliverToBoxAdapter(
+          child: const EmptyStateWidget(
+            icon: Icons.search_off,
+            title: 'لا توجد نتائج',
+            subtitle: 'جرب تغيير كلمات البحث',
+          ),
         );
       }
     }
 
     if (isMobile) {
-      return ListView.builder(
-        itemCount: _filteredContacts.length,
-        itemBuilder: (context, index) {
-          return _buildContactItem(_filteredContacts[index]);
-        },
+      return SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _buildContactItem(_filteredContacts[index]),
+          childCount: _filteredContacts.length,
+        ),
+
       );
     } else {
-      return GridView.builder(
+      return SliverGrid(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _buildContactItem(_filteredContacts[index]),
+          childCount: _filteredContacts.length,
+        ),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           childAspectRatio: 2.5,
         ),
-        itemCount: _filteredContacts.length,
-        itemBuilder: (context, index) {
-          return _buildContactItem(_filteredContacts[index]);
-        },
+
       );
     }
   }
@@ -304,12 +328,12 @@ class _ContactsPageState extends State<ContactsPage> {
       builder: (context) => ContactDialog(
         title: AppStrings.addContact,
         onSave: (name, phone, note) {
-          final contact = Contact.create(
-            name: name,
-            phone: phone,
-            note: note,
-          );
+          final contact = Contact.create(name: name, phone: phone, note: note);
           widget.onAddContact(contact);
+          setState(() {
+            _filteredContacts.add(contact);
+            _sortContacts();
+          });
         },
       ),
     );
@@ -331,6 +355,15 @@ class _ContactsPageState extends State<ContactsPage> {
             note: note,
           );
           widget.onUpdateContact(updatedContact);
+          setState(() {
+            final index = _filteredContacts.indexWhere(
+              (c) => c.id == updatedContact.id,
+            );
+            if (index != -1) {
+              _filteredContacts[index] = updatedContact;
+              _sortContacts();
+            }
+          });
         },
       ),
     );
@@ -349,6 +382,9 @@ class _ContactsPageState extends State<ContactsPage> {
 
     if (confirmed == true) {
       widget.onDeleteContact(contact.id);
+      setState(() {
+        _filteredContacts.removeWhere((c) => c.id == contact.id);
+      });
     }
   }
 
@@ -359,14 +395,18 @@ class _ContactsPageState extends State<ContactsPage> {
     widget.onSendMessage(contact.phone, defaultMessage);
   }
 
-  /// اتصال بجهة اتصال
-  void _callContact(Contact contact) {
-    // يمكن إضافة منطق الاتصال هنا
-    AppUtils.showCustomSnackBar(
-      context,
-      'ميزة الاتصال قيد التطوير',
-      isWarning: true,
-    );
+
+  void _callContact(Contact contact) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: contact.phone);
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    } else {
+      AppUtils.showCustomSnackBar(
+        context,
+        'لا يمكن إجراء الاتصال',
+        isError: true,
+      );
+    }
   }
 
   /// عرض حوار التصفية المتقدمة

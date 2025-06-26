@@ -15,6 +15,7 @@ class AppConstants {
   static const Color successGreen = Color(0xFF27AE60);
   static const Color warningOrange = Color(0xFFF39C12);
   static const Color infoBlue = Color(0xFF3498DB);
+  static const Color background = Color(0xFF22252c);
 
   // ألوان إضافية
   static const Color backgroundColor = Color(0xFFF8F9FA);

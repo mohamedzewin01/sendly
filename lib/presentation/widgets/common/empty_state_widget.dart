@@ -29,21 +29,19 @@ class EmptyStateWidget extends StatelessWidget {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildIcon(isMobile, effectiveColor),
-              const SizedBox(height: 24),
-              _buildTitle(isMobile),
-              const SizedBox(height: 12),
-              _buildSubtitle(isMobile),
-              if (actionText != null && onActionPressed != null) ...[
-                const SizedBox(height: 32),
-                _buildActionButton(isMobile, effectiveColor),
-              ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildIcon(isMobile, effectiveColor),
+            const SizedBox(height: 24),
+            _buildTitle(isMobile),
+            const SizedBox(height: 12),
+            _buildSubtitle(isMobile),
+            if (actionText != null && onActionPressed != null) ...[
+              const SizedBox(height: 32),
+              _buildActionButton(isMobile, effectiveColor),
             ],
-          ),
+          ],
         ),
       ),
     );

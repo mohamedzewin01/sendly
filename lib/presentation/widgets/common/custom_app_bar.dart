@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sendly/assets_manager.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../core/helpers/responsive_helper.dart';
 
@@ -46,7 +47,7 @@ class CustomAppBar extends StatelessWidget {
     return Hero(
       tag: 'app_icon',
       child: Container(
-        padding: EdgeInsets.all(isMobile ? 12 : 16),
+        padding: EdgeInsets.all(isMobile ? 6 : 8),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.2),
           borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
@@ -58,11 +59,17 @@ class CustomAppBar extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(
-          Icons.chat_bubble_outline,
-          color: Colors.white,
-          size: isMobile ? 28 : 36,
+        child: Image.asset(
+          Assets.logoPng,
+          width: isMobile ? 30 : 35,
+          height: isMobile ? 30 : 35,
         ),
+
+        // Icon(
+        //   Icons.chat_bubble_outline,
+        //   color: Colors.white,
+        //   size: isMobile ? 28 : 36,
+        // ),
       ),
     );
   }

@@ -215,7 +215,7 @@ class _ContactDialogState extends State<ContactDialog> {
             width: 1,
           ),
         ),
-        helperText: _getPhoneHelperText(),
+        // helperText: _getPhoneHelperText(),
         helperStyle: TextStyle(
           color: _getPhoneHelperColor(),
           fontWeight: FontWeight.w500,
@@ -308,20 +308,20 @@ class _ContactDialogState extends State<ContactDialog> {
   }
 
   /// الحصول على نص مساعد للهاتف
-  String _getPhoneHelperText() {
-    final phone = _phoneController.text.trim();
-    if (phone.isEmpty) {
-      return 'استخدم الصيغة الدولية +966XXXXXXXXX';
-    }
-
-    if (PhoneNumberFormatter.isValid(phone)) {
-      final carrier = PhoneNumberFormatter.getCarrier(phone);
-      final formatted = PhoneNumberFormatter.display(phone);
-      return 'رقم صحيح • $carrier • $formatted';
-    } else {
-      return PhoneNumberFormatter.getValidationError(phone);
-    }
-  }
+  // String _getPhoneHelperText() {
+  //   final phone = _phoneController.text.trim();
+  //   if (phone.isEmpty) {
+  //     return 'استخدم الصيغة الدولية +966XXXXXXXXX';
+  //   }
+  //
+  //   if (PhoneNumberFormatter.isValid(phone)) {
+  //     final carrier = PhoneNumberFormatter.getCarrier(phone);
+  //     final formatted = PhoneNumberFormatter.display(phone);
+  //     return 'رقم صحيح • $carrier • $formatted';
+  //   } else {
+  //     return PhoneNumberFormatter.getValidationError(phone);
+  //   }
+  // }
 
   /// الحصول على لون نص المساعد للهاتف
   Color _getPhoneHelperColor() {

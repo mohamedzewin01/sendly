@@ -1,7 +1,7 @@
 /// النصوص الثابتة للتطبيق
 class AppStrings {
   // معلومات التطبيق
-  static const String appTitle = 'مساعد الواتساب';
+  static const String appTitle = 'SendlyN';
   static const String appSubtitle = 'إرسال الرسائل بسهولة وسرعة';
   static const String appDescription = 'تطبيق يساعدك في إرسال الرسائل عبر الواتساب بطريقة سهلة ومنظمة';
 
@@ -23,7 +23,7 @@ class AppStrings {
   static const String contactAdded = 'تم إضافة جهة الاتصال بنجاح';
   static const String contactUpdated = 'تم تحديث جهة الاتصال بنجاح';
   static const String contactDeleted = 'تم حذف جهة الاتصال بنجاح';
-  static const String phoneHint = 'مثال: +966501234567';
+  static const String phoneHint = 'أدخل رقم الجوال ';
   static const String nameHint = 'أدخل اسم جهة الاتصال';
 
   // الرسائل

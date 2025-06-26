@@ -53,7 +53,10 @@ class _MessagesPageState extends State<MessagesPage> {
   void didUpdateWidget(MessagesPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.messages != widget.messages) {
-      _filterMessages();
+      setState(() {
+        _filteredMessages = List.from(widget.messages);
+        _sortMessages();
+      });
     }
   }
 
@@ -128,18 +131,26 @@ class _MessagesPageState extends State<MessagesPage> {
       ),
       child: Padding(
         padding: EdgeInsets.all(padding),
-        child: Column(
-          children: [
-            _buildStatsSection(isMobile),
-            const SizedBox(height: 20),
-            _buildSearchAndFilters(isMobile),
-            const SizedBox(height: 20),
-            _buildCategoryFilters(),
-            const SizedBox(height: 20),
-            Expanded(
-              child: _buildMessagesList(isMobile),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  _buildStatsSection(isMobile),
+                  const SizedBox(height: 20),
+                  _buildSearchAndFilters(isMobile),
+                  const SizedBox(height: 20),
+                  _buildCategoryFilters(),
+                  const SizedBox(height: 20),
+                  // Expanded(
+                  //   child: _buildMessagesList(isMobile),
+                  // ),
+                ],
+              ),
             ),
+            _buildMessagesList(isMobile)
           ],
+
         ),
       ),
     );
@@ -286,28 +297,37 @@ class _MessagesPageState extends State<MessagesPage> {
   Widget _buildMessagesList(bool isMobile) {
     if (_filteredMessages.isEmpty) {
       if (widget.messages.isEmpty) {
-        return EmptyStateWidget(
-          icon: Icons.message_outlined,
-          title: AppStrings.noMessages,
-          subtitle: AppStrings.startByAddingMessages,
-          actionText: AppStrings.addMessage,
-          onActionPressed: _showAddMessageDialog,
+        return SliverToBoxAdapter(
+          child: EmptyStateWidget(
+            icon: Icons.message_outlined,
+            title: AppStrings.noMessages,
+            subtitle: AppStrings.startByAddingMessages,
+            actionText: AppStrings.addMessage,
+            onActionPressed: _showAddMessageDialog,
+          ),
         );
       } else {
-        return const EmptyStateWidget(
-          icon: Icons.search_off,
-          title: 'لا توجد نتائج',
-          subtitle: 'جرب تغيير كلمات البحث أو التصنيف',
+        return SliverToBoxAdapter(
+          child: const EmptyStateWidget(
+            icon: Icons.search_off,
+            title: 'لا توجد نتائج',
+            subtitle: 'جرب تغيير كلمات البحث أو التصنيف',
+          ),
         );
       }
     }
 
-    return ListView.builder(
-      itemCount: _filteredMessages.length,
-      itemBuilder: (context, index) {
-        return _buildMessageItem(_filteredMessages[index]);
-      },
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => _buildMessageItem(_filteredMessages[index]),
+        childCount: _filteredMessages.length,
+      ),
     );
+    //   itemCount: _filteredMessages.length,
+    //   itemBuilder: (context, index) {
+    //     return _buildMessageItem(_filteredMessages[index]);
+    //   },
+    // );
   }
 
   /// بناء عنصر رسالة
@@ -334,6 +354,11 @@ class _MessagesPageState extends State<MessagesPage> {
             category: category,
           );
           widget.onAddMessage(message);
+          setState(() {
+            _filteredMessages.add(message);
+            _sortMessages();
+          });
+
         },
       ),
     );
@@ -355,6 +380,14 @@ class _MessagesPageState extends State<MessagesPage> {
             category: category,
           );
           widget.onUpdateMessage(updatedMessage);
+          setState(() {
+            final index = _filteredMessages.indexWhere((m) => m.id == updatedMessage.id);
+            if (index != -1) {
+              _filteredMessages[index] = updatedMessage;
+              _sortMessages();
+            }
+          });
+
         },
       ),
     );
@@ -372,9 +405,16 @@ class _MessagesPageState extends State<MessagesPage> {
     );
 
     if (confirmed == true) {
+      // استدعاء الدالة الخارجية للحذف من المصدر
       widget.onDeleteMessage(message.id);
+
+      // حذف فوري من القائمة المعروضة
+      setState(() {
+        _filteredMessages.removeWhere((m) => m.id == message.id);
+      });
     }
   }
+
 
   /// إرسال رسالة لجهة اتصال
   void _sendMessageToContact(Message message) {

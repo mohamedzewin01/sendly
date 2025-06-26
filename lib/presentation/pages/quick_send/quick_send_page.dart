@@ -544,7 +544,7 @@ class _QuickSendPageState extends State<QuickSendPage>
             ],
           ),
           const SizedBox(height: 12),
-          _buildTip('استخدم الصيغة الدولية للأرقام: +966501234567'),
+          // _buildTip('استخدم الصيغة الدولية للأرقام: +966501234567'),
           _buildTip('احفظ رسائلك المتكررة لاستخدامها بسرعة'),
           _buildTip('يمكنك مسح الحقول بالضغط على أيقونة X'),
         ],

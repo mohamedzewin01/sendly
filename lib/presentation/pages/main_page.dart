@@ -240,7 +240,6 @@ class _MainPageState extends State<MainPage>
   Widget _buildLoadingScreen() {
     return Scaffold(
       body: Container(
-
         decoration: const BoxDecoration(
           gradient: AppConstants.primaryGradient,
         ),
@@ -282,15 +281,21 @@ class _MainPageState extends State<MainPage>
     final padding = ResponsiveHelper.getResponsivePadding(context);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: padding),
+      margin: EdgeInsets.symmetric(horizontal: 3),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
       ),
       child: TabBar(
+        tabAlignment: TabAlignment.center,
         controller: _tabController,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorPadding: EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 4,
+        ),
         indicator: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white10,
           borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
           boxShadow: [
             BoxShadow(
@@ -300,8 +305,9 @@ class _MainPageState extends State<MainPage>
             ),
           ],
         ),
-        labelColor: AppConstants.whatsappGreen,
-        unselectedLabelColor: Colors.white,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white54,
+        isScrollable: true,
         labelStyle: TextStyle(
           fontSize: ResponsiveHelper.getResponsiveFontSize(
             context,
@@ -313,7 +319,7 @@ class _MainPageState extends State<MainPage>
           _buildTab(Icons.send, AppStrings.quickSendTab),
           _buildTab(Icons.contacts, AppStrings.contactsTab),
           _buildTab(Icons.message, AppStrings.messagesTab),
-          // _buildTab(Icons.group, AppStrings.bulkSendTab),
+          _buildTab(Icons.group, AppStrings.bulkSendTab),
           _buildTab(Icons.settings, AppStrings.settingsTab),
         ],
       ),
@@ -358,11 +364,10 @@ class _MainPageState extends State<MainPage>
           onSendMessage: _sendWhatsAppMessage,
           contacts: _contacts,
         ),
-
-        // BulkSendPage(
-        //   contacts: _contacts,
-        //   onSendBulkMessage: _sendBulkMessage,
-        // ),
+        BulkSendPage(
+          contacts: _contacts,
+          onSendBulkMessage: _sendBulkMessage,
+        ),
         SettingsPage(
           contacts: _contacts,
           messages: _messages,
@@ -375,6 +380,10 @@ class _MainPageState extends State<MainPage>
       ],
     );
   }
+
+
+
+
 
   /// تصدير جهات الاتصال
   Future<void> _exportContacts() async {
