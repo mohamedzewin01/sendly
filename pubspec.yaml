@@ -5,7 +5,7 @@ description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 
-version: 1.0.4+4
+version: 1.0.5+5
 
 
 environment:
@@ -19,7 +19,7 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.2
-  url_launcher: ^6.2.1
+  url_launcher: ^6.3.1
   file_picker: ^10.2.0
   path_provider: ^2.1.5
   share_plus: ^11.0.0

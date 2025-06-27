@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/helpers/phone_formatter.dart';
 import '../../app/constants/app_constants.dart';
@@ -112,37 +114,82 @@ class WhatsAppService {
 
   /// إنشاء رابط الواتساب
   String _createWhatsAppUrl(String phone, [String? message]) {
-    // إزالة علامة + من بداية الرقم للرابط
     final cleanPhone = phone.startsWith('+') ? phone.substring(1) : phone;
+    final encodedMessage = Uri.encodeComponent(message ?? '');
 
-    String url = '${AppConstants.whatsappBaseUrl}$cleanPhone';
-
-    if (message != null && message.isNotEmpty) {
-      final encodedMessage = Uri.encodeComponent(message);
-      url += '?text=$encodedMessage';
+    if (Platform.isAndroid) {
+      return 'whatsapp://send?phone=+$cleanPhone&text=$encodedMessage';
+    } else if (Platform.isIOS) {
+      return 'https://wa.me/$cleanPhone?text=$encodedMessage';
+    } else if (Platform.isWindows) {
+      return 'https://wa.me/$cleanPhone/?text=$encodedMessage&app_absent=1';
+    } else {
+      return 'https://web.whatsapp.com/send?phone=$cleanPhone&text=$encodedMessage';
     }
-
-    return url;
   }
+
+  ///
+  // String _createWhatsAppUrl(String phone, [String? message]) {
+  //   final cleanPhone = phone.startsWith('+') ? phone.substring(1) : phone;
+  //   final encodedMessage = message != null ? Uri.encodeComponent(message) : '';
+  //
+  //   // نستخدم whatsapp://send إن أمكن، لأنها أفضل للأجهزة اللي واتساب مش مرتبط فيها بـ wa.me
+  //   if (message != null && message.isNotEmpty) {
+  //     return 'whatsapp://send?phone=$cleanPhone&text=$encodedMessage';
+  //   } else {
+  //     return 'whatsapp://send?phone=$cleanPhone';
+  //   }
+  // }
+
+  ///
+  // String _createWhatsAppUrl(String phone, [String? message]) {
+  //   // إزالة علامة + من بداية الرقم للرابط
+  //   final cleanPhone = phone.startsWith('+') ? phone.substring(1) : phone;
+  //
+  //   String url = '${AppConstants.whatsappBaseUrl}$cleanPhone';
+  //
+  //   if (message != null && message.isNotEmpty) {
+  //     final encodedMessage = Uri.encodeComponent(message);
+  //     url += '?text=$encodedMessage';
+  //   }
+  //
+  //   return url;
+  // }
 
   /// فتح الرابط
   Future<bool> _launchUrl(String url) async {
     try {
       final uri = Uri.parse(url);
 
-      final canLaunch = await canLaunchUrl(uri);
-      if (!canLaunch) {
-        throw WhatsAppException('لا يمكن فتح الواتساب. تأكد من تثبيت التطبيق');
+      if (!await canLaunchUrl(uri)) {
+        throw WhatsAppException('لا يمكن فتح الرابط: $url');
       }
 
-      return await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+      final result = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      return result;
     } catch (e) {
       throw WhatsAppException('فشل في فتح الواتساب: ${e.toString()}');
     }
   }
+
+  ///
+  // Future<bool> _launchUrl(String url) async {
+  //   try {
+  //     final uri = Uri.parse(url);
+  //
+  //     final canLaunch = await canLaunchUrl(uri);
+  //     if (!canLaunch) {
+  //       throw WhatsAppException('لا يمكن فتح الواتساب. تأكد من تثبيت التطبيق');
+  //     }
+  //
+  //     return await launchUrl(
+  //       uri,
+  //       mode: LaunchMode.externalApplication,
+  //     );
+  //   } catch (e) {
+  //     throw WhatsAppException('فشل في فتح الواتساب: ${e.toString()}');
+  //   }
+  // }
 
   /// الحصول على الصيغ المدعومة
   List<String> _getSupportedSchemes() {
