@@ -911,13 +911,13 @@ class _SettingsPageState extends State<SettingsPage>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      'حالة البيانات: ${appStats.healthStatus}',
-                      style: TextStyle(
-                        color: AppUtils.getStatusColor(appStats.healthStatus.toLowerCase()),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    // Text(
+                    //   'حالة البيانات: ${appStats.healthStatus}',
+                    //   style: TextStyle(
+                    //     color: AppUtils.getStatusColor(appStats.healthStatus.toLowerCase()),
+                    //     fontWeight: FontWeight.w600,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -946,25 +946,25 @@ class _SettingsPageState extends State<SettingsPage>
                 Icons.message,
                 AppConstants.warningOrange,
               ),
-              _buildStatCard(
-                'أرقام صحيحة',
-                contactStats.validPhones.toString(),
-                Icons.phone,
-                AppConstants.successGreen,
-              ),
-              _buildStatCard(
-                'متوسط طول الرسالة',
-                '${messageStats.averageLength} حرف',
-                Icons.text_fields,
-                AppConstants.infoBlue,
-              ),
+              // _buildStatCard(
+              //   'أرقام صحيحة',
+              //   contactStats.validPhones.toString(),
+              //   Icons.phone,
+              //   AppConstants.successGreen,
+              // ),
+              // _buildStatCard(
+              //   'متوسط طول الرسالة',
+              //   '${messageStats.averageLength} حرف',
+              //   Icons.text_fields,
+              //   AppConstants.infoBlue,
+              // ),
             ],
           ),
 
-          if (contactStats.total > 0 || messageStats.total > 0) ...[
-            const SizedBox(height: 20),
-            _buildHealthIndicator(appStats),
-          ],
+          // if (contactStats.total > 0 || messageStats.total > 0) ...[
+          //   const SizedBox(height: 20),
+          //   _buildHealthIndicator(appStats),
+          // ],
         ],
       ),
     );
@@ -1306,9 +1306,10 @@ class _SettingsPageState extends State<SettingsPage>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '• التطبيق يعمل بشكل مستقل ولا يحتاج اتصال بالإنترنت\n'
+                  '• التطبيق لا يرسل الرسائل تلقائيًا، بل يفتح شاشة واتساب للمستخدم لإرسالها يدويًا\n'
+                  '• التطبيق لا يجري المكالمات تلقائيًا، بل يفتح شاشة الاتصال فقط.\n'
                       '• عند إلغاء تثبيت التطبيق ستفقد جميع البيانات المحفوظة\n'
-                      '• يُنصح بعمل نسخة احتياطية من بياناتك بانتظام\n'
+                      '• جميع البيانات تُخزّن محليًا على جهاز المستخدم، ولا يتم جمع أو مشاركة أي معلومات شخصية\n'
                       '• لا نطلب أي أذونات غير ضرورية من نظام التشغيل',
                   style: TextStyle(
                     fontSize: isMobile ? 13 : 15,
@@ -1345,90 +1346,135 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   /// بناء مؤشر صحة البيانات
-  Widget _buildHealthIndicator(AppUsageStatistics stats) {
-    final healthColor = AppUtils.getStatusColor(stats.healthStatus.toLowerCase());
+  // Widget _buildHealthIndicator(AppUsageStatistics stats) {
+  //   final healthColor = AppUtils.getStatusColor(stats.healthStatus.toLowerCase());
+  //
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: healthColor.withOpacity(0.1),
+  //       borderRadius: BorderRadius.circular(12),
+  //       border: Border.all(color: healthColor.withOpacity(0.3)),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Icon(
+  //           AppUtils.getStatusIcon(stats.healthStatus.toLowerCase()),
+  //           color: healthColor,
+  //           size: 24,
+  //         ),
+  //         const SizedBox(width: 12),
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 'صحة البيانات: ${stats.dataHealth}%',
+  //                 style: TextStyle(
+  //                   fontWeight: FontWeight.bold,
+  //                   color: healthColor,
+  //                 ),
+  //               ),
+  //               LinearProgressIndicator(
+  //                 value: stats.dataHealth / 100,
+  //                 backgroundColor: healthColor.withOpacity(0.2),
+  //                 valueColor: AlwaysStoppedAnimation<Color>(healthColor),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: healthColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: healthColor.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            AppUtils.getStatusIcon(stats.healthStatus.toLowerCase()),
-            color: healthColor,
-            size: 24,
+  /// بناء بطاقة إحصائية
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          width: constraints.maxWidth, // ياخذ العرض المتاح له
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withOpacity(0.3)),
           ),
-          const SizedBox(width: 12),
-          Expanded(
+          child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Icon(icon, color: color, size: 32),
+                const SizedBox(height: 8),
                 Text(
-                  'صحة البيانات: ${stats.dataHealth}%',
+                  value,
                   style: TextStyle(
+                    fontSize: constraints.maxWidth * 0.08, // حجم ديناميكي
                     fontWeight: FontWeight.bold,
-                    color: healthColor,
+                    color: color,
                   ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                LinearProgressIndicator(
-                  value: stats.dataHealth / 100,
-                  backgroundColor: healthColor.withOpacity(0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(healthColor),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: constraints.maxWidth * 0.08, // حجم ديناميكي
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  /// بناء بطاقة إحصائية
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: color.withOpacity(0.1),
+  //       borderRadius: BorderRadius.circular(16),
+  //       border: Border.all(color: color.withOpacity(0.3)),
+  //     ),
+  //     child: Column(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       children: [
+  //         Icon(icon, color: color, size: 32),
+  //         const SizedBox(height: 8),
+  //         Text(
+  //           value,
+  //           style: TextStyle(
+  //             fontSize: 18,
+  //             fontWeight: FontWeight.bold,
+  //             color: color,
+  //           ),
+  //           textAlign: TextAlign.center,
+  //           maxLines: 1,
+  //           overflow: TextOverflow.ellipsis,
+  //         ),
+  //         const SizedBox(height: 4),
+  //         Text(
+  //           title,
+  //           style: TextStyle(
+  //             fontSize: 12,
+  //             color: Colors.grey[600],
+  //           ),
+  //           textAlign: TextAlign.center,
+  //           maxLines: 2,
+  //           overflow: TextOverflow.ellipsis,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   /// بناء عنصر ميزة
   Widget _buildFeatureItem(String emoji, String text) {
@@ -1610,7 +1656,7 @@ class _SettingsPageState extends State<SettingsPage>
               ),
               const SizedBox(width: 16),
               Text(
-                'المنطقة الخطرة',
+                'مسح وإعادة تعيين',
                 style: TextStyle(
                   fontSize: isMobile ? 18 : 20,
                   fontWeight: FontWeight.bold,
@@ -1872,7 +1918,7 @@ class ChildrenSafetyPolicyPage extends StatelessWidget {
   void _launchEmail() async {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: 'eng.mo.zewin@gmail.com',
+      path: 'mohammedzewin01@gmail.com',
       query: Uri.encodeFull('subject=استفسار بشأن سياسة الأطفال&body=مرحبًا فريق SandlyN،'),
     );
 
@@ -1954,7 +2000,7 @@ class ChildrenSafetyPolicyPage extends StatelessWidget {
                 GestureDetector(
                   onTap: _launchEmail,
                   child: const Text(
-                    '📧 eng.mo.zewin@gmail.com',
+                    '📧 mohammedzewin01@gmail.com',
                     style: TextStyle(
                       color: Colors.indigo,
                       fontSize: 16,

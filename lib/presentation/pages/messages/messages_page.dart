@@ -142,6 +142,7 @@ class _MessagesPageState extends State<MessagesPage> {
                   const SizedBox(height: 20),
                   _buildCategoryFilters(),
                   const SizedBox(height: 20),
+
                   // Expanded(
                   //   child: _buildMessagesList(isMobile),
                   // ),

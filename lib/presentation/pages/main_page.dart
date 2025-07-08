@@ -49,7 +49,7 @@ class _MainPageState extends State<MainPage>
 
   /// تهيئة المتحكمات والرسوم المتحركة
   void _initializeControllers() {
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length:4, vsync: this);
     _animationController = AnimationController(
       duration: AppConstants.slowAnimation,
       vsync: this,
@@ -213,22 +213,25 @@ class _MainPageState extends State<MainPage>
       return _buildLoadingScreen();
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppConstants.primaryGradient,
-        ),
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Column(
-              children: [
-                _buildAppHeader(),
-                _buildTabBar(),
-                Expanded(
-                  child: _buildTabBarView(),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: AppConstants.primaryGradient,
+          ),
+          child: SafeArea(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  _buildAppHeader(),
+                  _buildTabBar(),
+                  Expanded(
+                    child: _buildTabBarView(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -281,7 +284,7 @@ class _MainPageState extends State<MainPage>
     final padding = ResponsiveHelper.getResponsivePadding(context);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 3),
+      margin: EdgeInsets.symmetric(horizontal: 6,vertical:2 ),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
@@ -290,10 +293,11 @@ class _MainPageState extends State<MainPage>
         tabAlignment: TabAlignment.center,
         controller: _tabController,
         indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 4,
-        ),
+        physics: BouncingScrollPhysics(),
+        // indicatorPadding: EdgeInsets.symmetric(
+        //   horizontal: 10,
+        //   vertical: 4,
+        // ),
         indicator: BoxDecoration(
           color: Colors.white10,
           borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
@@ -319,7 +323,7 @@ class _MainPageState extends State<MainPage>
           _buildTab(Icons.send, AppStrings.quickSendTab),
           _buildTab(Icons.contacts, AppStrings.contactsTab),
           _buildTab(Icons.message, AppStrings.messagesTab),
-          _buildTab(Icons.group, AppStrings.bulkSendTab),
+          // _buildTab(Icons.group, AppStrings.bulkSendTab),
           _buildTab(Icons.settings, AppStrings.settingsTab),
         ],
       ),
@@ -364,10 +368,10 @@ class _MainPageState extends State<MainPage>
           onSendMessage: _sendWhatsAppMessage,
           contacts: _contacts,
         ),
-        BulkSendPage(
-          contacts: _contacts,
-          onSendBulkMessage: _sendBulkMessage,
-        ),
+        // BulkSendPage(
+        //   contacts: _contacts,
+        //   onSendBulkMessage: _sendBulkMessage,
+        // ),
         SettingsPage(
           contacts: _contacts,
           messages: _messages,
