@@ -178,25 +178,6 @@ class _MainPageState extends State<MainPage>
     }
   }
 
-  /// إرسال رسالة جماعية
-  Future<void> _sendBulkMessage(List<Contact> contacts, String message) async {
-    try {
-      for (int i = 0; i < contacts.length; i++) {
-        final contact = contacts[i];
-        await _messagingService.openMessagingApp(contact.phone, message);
-
-        // تأخير بسيط بين الرسائل
-        if (i < contacts.length - 1) {
-          await Future.delayed(const Duration(milliseconds: 500));
-        }
-      }
-
-      _showSuccessMessage('تم إرسال الرسالة إلى ${contacts.length} جهة اتصال');
-    } catch (e) {
-      _showErrorMessage('فشل في الإرسال الجماعي: ${e.toString()}');
-    }
-  }
-
   /// عرض رسالة نجاح
   void _showSuccessMessage(String message) {
     AppUtils.showCustomSnackBar(context, message, isSuccess: true);

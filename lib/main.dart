@@ -15,7 +15,10 @@ void main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.black, // ← لون الشريط السفلي
+    systemNavigationBarIconBrightness: Brightness.light, // ← لون الأيقونات (light = بيضاء)
+  ));
   // تخصيص شريط الحالة
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -25,9 +28,9 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(DevicePreview(
-    enabled: !kReleaseMode,
-    builder: (context) => appHelperApp(),
-  ));
-  // runApp(const appHelperApp());
+  // runApp(DevicePreview(
+  //   enabled: !kReleaseMode,
+  //   builder: (context) => appHelperApp(),
+  // ));
+  runApp(const appHelperApp());
 }

@@ -1,7 +1,7 @@
 /// النصوص الثابتة للتطبيق
 class AppStrings {
   static const String appTitle = 'SandlyN';
-  static const String appSubtitle = 'مراسلة مباشرة ومنظمة';
+  static const String appSubtitle = 'مراسلة مباشرة';
   static const String appDescription = 'تطبيق يساعدك في إدارة جهات الاتصال والرسائل بطريقة منظمة وفعالة';
 
   // التبويبات الرئيسية
