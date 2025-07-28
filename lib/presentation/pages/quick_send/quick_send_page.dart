@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sendly/core/utils/ad_manger.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/constants/app_strings.dart';
 import '../../../core/helpers/responsive_helper.dart';
@@ -25,20 +26,23 @@ class QuickSendPage extends StatefulWidget {
 
 class _QuickSendPageState extends State<QuickSendPage>
     with SingleTickerProviderStateMixin {
-
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
+
+  bool _isBannerAdLoaded = false;
+
+
 
   String? _selectedMessageId;
 
   @override
   void initState() {
     super.initState();
+
     _initializeAnimations();
   }
 
@@ -48,24 +52,17 @@ class _QuickSendPageState extends State<QuickSendPage>
       vsync: this,
     );
 
-    _slideAnimation = Tween<double>(
-      begin: 50.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation = Tween<double>(begin: 50.0, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeIn,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
 
     _animationController.forward();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +96,9 @@ class _QuickSendPageState extends State<QuickSendPage>
                         const SizedBox(height: 24),
                         _buildSavedMessagesSection(context, isMobile),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 5),
+
+
                       _buildQuickTipsSection(isMobile),
                     ],
                   ),
@@ -118,11 +117,11 @@ class _QuickSendPageState extends State<QuickSendPage>
       width: double.infinity,
       padding: EdgeInsets.all(isMobile ? 20 : 24),
       decoration: BoxDecoration(
-        gradient: AppConstants.whatsappGradient,
+        gradient: AppConstants.appGradient,
         borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
         boxShadow: [
           BoxShadow(
-            color: AppConstants.whatsappGreen.withOpacity(0.3),
+            color: AppConstants.appGreen.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -150,7 +149,7 @@ class _QuickSendPageState extends State<QuickSendPage>
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
-            Icons.send_rounded,
+            Icons.open_in_new,
             color: Colors.white,
             size: isMobile ? 28 : 32,
           ),
@@ -233,29 +232,24 @@ class _QuickSendPageState extends State<QuickSendPage>
       decoration: InputDecoration(
         labelText: AppStrings.phoneNumber,
         hintText: AppStrings.phoneHint,
-        prefixIcon: const Icon(Icons.phone, color: AppConstants.whatsappGreen),
+        prefixIcon: const Icon(Icons.phone, color: AppConstants.appGreen),
         suffixIcon: _phoneController.text.isNotEmpty
             ? IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () => _phoneController.clear(),
-        )
+                icon: const Icon(Icons.clear),
+                onPressed: () => _phoneController.clear(),
+              )
             : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(
-            color: AppConstants.whatsappGreen,
+            color: AppConstants.appGreen,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: AppConstants.errorRed,
-            width: 1,
-          ),
+          borderSide: const BorderSide(color: AppConstants.errorRed, width: 1),
         ),
       ),
       onChanged: (value) {
@@ -282,34 +276,32 @@ class _QuickSendPageState extends State<QuickSendPage>
       decoration: InputDecoration(
         labelText: AppStrings.messageText,
         hintText: AppStrings.messageContentHint,
-        prefixIcon: const Icon(Icons.message, color: AppConstants.whatsappGreen),
+        prefixIcon: const Icon(
+          Icons.message,
+          color: AppConstants.appGreen,
+        ),
         suffixIcon: _messageController.text.isNotEmpty
             ? IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () {
-            _messageController.clear();
-            setState(() {
-              _selectedMessageId = null;
-            });
-          },
-        )
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  _messageController.clear();
+                  setState(() {
+                    _selectedMessageId = null;
+                  });
+                },
+              )
             : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(
-            color: AppConstants.whatsappGreen,
+            color: AppConstants.appGreen,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: AppConstants.errorRed,
-            width: 1,
-          ),
+          borderSide: const BorderSide(color: AppConstants.errorRed, width: 1),
         ),
         helperText: 'عدد الأحرف: ${_messageController.text.length}',
       ),
@@ -329,16 +321,16 @@ class _QuickSendPageState extends State<QuickSendPage>
       height: 56,
       child: ElevatedButton.icon(
         onPressed: isValid ? _handleSendMessage : null,
-        icon: const Icon(Icons.send, size: 24),
+        icon: const Icon(Icons.open_in_new, size: 24), // تم تغيير الأيقونة
         label: Text(
-          AppStrings.sendViaWhatsApp,
+          AppStrings.openMessagingApp, // تم التغيير
           style: TextStyle(
             fontSize: isMobile ? 16 : 18,
             fontWeight: FontWeight.bold,
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppConstants.whatsappGreen,
+          backgroundColor: AppConstants.appGreen,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -367,7 +359,7 @@ class _QuickSendPageState extends State<QuickSendPage>
               style: TextStyle(
                 fontSize: isMobile ? 18 : 20,
                 fontWeight: FontWeight.bold,
-                color: AppConstants.whatsappDarkGreen,
+                color: AppConstants.appDarkGreen,
               ),
             ),
           ],
@@ -389,12 +381,12 @@ class _QuickSendPageState extends State<QuickSendPage>
                   margin: const EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppConstants.whatsappLight
+                        ? AppConstants.appLight
                         : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isSelected
-                          ? AppConstants.whatsappGreen
+                          ? AppConstants.appGreen
                           : Colors.grey.shade200,
                       width: isSelected ? 2 : 1,
                     ),
@@ -418,13 +410,13 @@ class _QuickSendPageState extends State<QuickSendPage>
                               height: 36,
                               decoration: BoxDecoration(
                                 gradient: isSelected
-                                    ? AppConstants.whatsappGradient
+                                    ? AppConstants.appGradient
                                     : LinearGradient(
-                                  colors: [
-                                    Colors.grey.shade300,
-                                    Colors.grey.shade400,
-                                  ],
-                                ),
+                                        colors: [
+                                          Colors.grey.shade300,
+                                          Colors.grey.shade400,
+                                        ],
+                                      ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -441,7 +433,7 @@ class _QuickSendPageState extends State<QuickSendPage>
                                   fontWeight: FontWeight.bold,
                                   fontSize: isMobile ? 14 : 16,
                                   color: isSelected
-                                      ? AppConstants.whatsappDarkGreen
+                                      ? AppConstants.appDarkGreen
                                       : Colors.black87,
                                 ),
                                 maxLines: 1,
@@ -456,7 +448,9 @@ class _QuickSendPageState extends State<QuickSendPage>
                             message.content,
                             style: TextStyle(
                               color: isSelected
-                                  ? AppConstants.whatsappDarkGreen.withOpacity(0.8)
+                                  ? AppConstants.appDarkGreen.withOpacity(
+                                      0.8,
+                                    )
                                   : Colors.grey[600],
                               fontSize: isMobile ? 12 : 14,
                               height: 1.4,
@@ -476,7 +470,9 @@ class _QuickSendPageState extends State<QuickSendPage>
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AppConstants.whatsappGreen.withOpacity(0.2)
+                                    ? AppConstants.appGreen.withOpacity(
+                                        0.2,
+                                      )
                                     : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -484,7 +480,7 @@ class _QuickSendPageState extends State<QuickSendPage>
                                 AppStrings.tapToUse,
                                 style: TextStyle(
                                   color: isSelected
-                                      ? AppConstants.whatsappDarkGreen
+                                      ? AppConstants.appDarkGreen
                                       : Colors.grey[600],
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
@@ -544,9 +540,9 @@ class _QuickSendPageState extends State<QuickSendPage>
             ],
           ),
           const SizedBox(height: 12),
-          // _buildTip('استخدم الصيغة الدولية للأرقام: +966501234567'),
           _buildTip('احفظ رسائلك المتكررة لاستخدامها بسرعة'),
           _buildTip('يمكنك مسح الحقول بالضغط على أيقونة X'),
+
         ],
       ),
     );
@@ -632,6 +628,8 @@ class _QuickSendPageState extends State<QuickSendPage>
     _phoneController.dispose();
     _messageController.dispose();
     _animationController.dispose();
+
+
     super.dispose();
   }
 }

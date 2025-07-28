@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 /// ثوابت التطبيق والألوان والتدرجات
 class AppConstants {
-  // ألوان الواتساب الرسمية
-  static const Color whatsappGreen = Color(0xFF25D366);
-  static const Color whatsappDarkGreen = Color(0xFF128C7E);
-  static const Color whatsappLight = Color(0xFFDCF8C6);
-  static const Color whatsappBlue = Color(0xFF34B7F1);
+
+  static const Color appGreen = Color(0xFF25D366);
+  static const Color appDarkGreen = Color(0xFF128C7E);
+  static const Color appLight = Color(0xFFDCF8C6);
+  static const Color appBlue = Color(0xFF34B7F1);
 
   // ألوان التطبيق الأساسية
   static const Color primaryBlue = Color(0xFF667eea);
@@ -30,8 +30,8 @@ class AppConstants {
     end: Alignment.bottomRight,
   );
 
-  static const LinearGradient whatsappGradient = LinearGradient(
-    colors: [whatsappGreen, whatsappDarkGreen],
+  static const LinearGradient appGradient = LinearGradient(
+    colors: [appGreen, appDarkGreen],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -101,8 +101,8 @@ class AppConstants {
   static const String languageKey = 'language';
 
   // روابط ومعرفات
-  static const String whatsappBaseUrl = 'https://wa.me/';
-  static const String supportEmail = 'support@whatsapphelper.com';
+  static const String appBaseUrl = 'https://wa.me/';
+  static const String supportEmail = 'support@apphelper.com';
   static const String appVersion = '1.0.0';
   static const String appBuildNumber = '1';
 

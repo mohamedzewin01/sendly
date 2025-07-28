@@ -5,19 +5,19 @@ import '../../core/helpers/phone_formatter.dart';
 import '../../app/constants/app_constants.dart';
 
 /// خدمة التعامل مع الواتساب
-class WhatsAppService {
-  static WhatsAppService? _instance;
+class MessagingService  {
+  static MessagingService ? _instance;
 
-  WhatsAppService._internal();
+  MessagingService ._internal();
 
   /// الحصول على المثيل الوحيد
-  factory WhatsAppService() {
-    _instance ??= WhatsAppService._internal();
+  factory MessagingService () {
+    _instance ??= MessagingService ._internal();
     return _instance!;
   }
 
   /// إرسال رسالة عبر الواتساب
-  Future<bool> sendMessage(String phone, String message) async {
+  Future<bool> openMessagingApp(String phone, String message) async {
     try {
       // تنسيق رقم الهاتف
       final formattedPhone = PhoneNumberFormatter.format(phone);
@@ -66,7 +66,7 @@ class WhatsAppService {
       final phone = phones[i];
 
       try {
-        final success = await sendMessage(phone, message);
+        final success = await openMessagingApp(phone, message);
         results.add(WhatsAppResult(
           phone: phone,
           success: success,

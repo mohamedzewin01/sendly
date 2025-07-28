@@ -1,9 +1,8 @@
 /// النصوص الثابتة للتطبيق
 class AppStrings {
-  // معلومات التطبيق
-  static const String appTitle = 'SendlyN';
-  static const String appSubtitle = 'إرسال الرسائل بسهولة وسرعة';
-  static const String appDescription = 'تطبيق يساعدك في إرسال الرسائل عبر الواتساب بطريقة سهلة ومنظمة';
+  static const String appTitle = 'SandlyN';
+  static const String appSubtitle = 'مراسلة مباشرة ومنظمة';
+  static const String appDescription = 'تطبيق يساعدك في إدارة جهات الاتصال والرسائل بطريقة منظمة وفعالة';
 
   // التبويبات الرئيسية
   static const String contactsTab = 'الجهات';
@@ -11,6 +10,40 @@ class AppStrings {
   static const String quickSendTab = 'إرسال سريع';
   static const String bulkSendTab = 'إرسال جماعي';
   static const String settingsTab = 'الإعدادات';
+
+  // الإرسال السريع - تم التعديل
+  static const String quickSend = 'إرسال سريع';
+  static const String quickSendDescription = 'أرسل رسالة لأي رقم عبر تطبيقات المراسلة';
+  static const String sendMessage = 'إرسال الرسالة';
+  static const String sendViaMessaging = 'إرسال عبر تطبيق المراسلة'; // تم التغيير
+  static const String openMessagingApp = 'فتح تطبيق المراسلة'; // جديد
+  static const String messageText = 'نص الرسالة';
+  static const String phoneNumber = 'رقم الهاتف';
+  static const String tapToUse = 'اضغط للاستخدام';
+  static const String messageSent = 'تم فتح تطبيق المراسلة بنجاح'; // تم التعديل
+
+  // الإرسال الجماعي - تم التعديل
+  static const String bulkSend = 'إرسال جماعي';
+  static const String bulkSendDescription = 'أرسل رسالة واحدة لعدة جهات اتصال عبر تطبيقات المراسلة';
+  static const String bulkMessageHint = 'اكتب الرسالة التي تريد إرسالها لجميع جهات الاتصال المحددة';
+
+  // رسائل النجاح - تم التعديل
+  static const String messagingAppOpened = 'تم فتح تطبيق المراسلة بنجاح'; // تم التغيير
+  static const String callAppOpened = 'تم فتح تطبيق الاتصال بنجاح'; // جديد
+
+  // رسائل الخطأ - تم التعديل
+  static const String cantOpenMessagingApp = 'لا يمكن فتح تطبيق المراسلة'; // تم التغيير
+  static const String cantOpenCallApp = 'لا يمكن فتح تطبيق الاتصال'; // جديد
+  static const String noMessagingAppInstalled = 'لا يوجد تطبيق مراسلة مثبت على الجهاز'; // جديد
+
+  // إضافة نصوص جديدة للتوضيح
+  static const String messagingAppNote = 'سيتم فتح تطبيق المراسلة المفضل لديك';
+  static const String callAppNote = 'سيتم فتح تطبيق الاتصال الافتراضي';
+  static const String externalAppDisclaimer = 'يتم فتح التطبيقات الخارجية للتحكم اليدوي';
+
+
+
+
 
   // جهات الاتصال
   static const String contacts = 'جهات الاتصال';
@@ -42,24 +75,20 @@ class AppStrings {
   static const String messageContentHint = 'اكتب محتوى الرسالة هنا...';
 
   // الإرسال السريع
-  static const String quickSend = 'إرسال سريع';
-  static const String quickSendDescription = 'أرسل رسالة لأي رقم بسرعة';
-  static const String sendMessage = 'إرسال الرسالة';
-  static const String sendViaWhatsApp = 'إرسال عبر الواتساب';
-  static const String messageText = 'نص الرسالة';
-  static const String phoneNumber = 'رقم الهاتف';
-  static const String tapToUse = 'اضغط للاستخدام';
-  static const String messageSent = 'تم إرسال الرسالة بنجاح';
+
+
+
+
+
 
   // الإرسال الجماعي
-  static const String bulkSend = 'إرسال جماعي';
-  static const String bulkSendDescription = 'أرسل رسالة واحدة لعدة جهات اتصال';
+
   static const String selectContacts = 'اختيار جهات الاتصال';
   static const String selectAll = 'اختيار الكل';
   static const String unselectAll = 'إلغاء الكل';
   static const String sendToSelected = 'إرسال للمحددين';
   static const String contactsSelected = 'جهة اتصال محددة';
-  static const String bulkMessageHint = 'اكتب الرسالة التي تريد إرسالها لجميع جهات الاتصال المحددة';
+
 
   // الإعدادات
   static const String settings = 'الإعدادات';
@@ -110,12 +139,11 @@ class AppStrings {
 
   // رسائل النجاح
   static const String dataCopiedToClipboard = 'تم نسخ البيانات إلى الحافظة';
-  static const String whatsappOpened = 'تم فتح الواتساب بنجاح';
   static const String dataExported = 'تم تصدير البيانات بنجاح';
   static const String dataCleared = 'تم مسح جميع البيانات بنجاح';
 
   // رسائل الخطأ
-  static const String cantOpenWhatsApp = 'لا يمكن فتح الواتساب';
+
   static const String exportFailed = 'فشل في تصدير البيانات';
   static const String importFailed = 'فشل في استيراد البيانات';
   static const String unexpectedError = 'حدث خطأ غير متوقع';

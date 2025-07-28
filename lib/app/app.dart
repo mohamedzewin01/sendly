@@ -4,8 +4,8 @@ import '../app/constants/app_strings.dart';
 import '../presentation/pages/main_page.dart';
 import '../presentation/widgets/message/message_card.dart'; // لاستيراد navigatorKey
 
-class WhatsAppHelperApp extends StatelessWidget {
-  const WhatsAppHelperApp({super.key});
+class appHelperApp extends StatelessWidget {
+  const appHelperApp({super.key});
 
   @override
   Widget build(BuildContext context) {

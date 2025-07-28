@@ -191,9 +191,9 @@ class Contact {
     return null;
   }
 
-  /// إنشاء رابط الواتساب
-  String createWhatsAppUrl([String? message]) {
-    return PhoneNumberFormatter.toWhatsAppUrl(phone, message);
+  /// إنشاء رابط
+  String createappUrl([String? message]) {
+    return PhoneNumberFormatter.toappUrl(phone, message);
   }
 
   /// التحقق من صحة البيانات

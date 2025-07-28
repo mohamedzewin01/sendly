@@ -151,7 +151,7 @@ class _ContactsPageState extends State<ContactsPage> {
       title: AppStrings.contacts,
       count: stats.total.toString(),
       icon: Icons.contacts,
-      color: AppConstants.whatsappGreen,
+      color: AppConstants.appGreen,
       onTap: _showAddContactDialog,
       subtitle: 'أرقام صحيحة: ${stats.validPhones}',
     );
@@ -167,7 +167,7 @@ class _ContactsPageState extends State<ContactsPage> {
             hintText: 'البحث في جهات الاتصال...',
             prefixIcon: const Icon(
               Icons.search,
-              color: AppConstants.whatsappGreen,
+              color: AppConstants.appGreen,
             ),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
@@ -219,7 +219,7 @@ class _ContactsPageState extends State<ContactsPage> {
           Icon(
             icon,
             size: 16,
-            color: isActive ? Colors.white : AppConstants.whatsappGreen,
+            color: isActive ? Colors.white : AppConstants.appGreen,
           ),
           const SizedBox(width: 4),
           Text(label),
@@ -235,10 +235,10 @@ class _ContactsPageState extends State<ContactsPage> {
       ),
       selected: isActive,
       onSelected: (_) => _changeSorting(sortKey),
-      selectedColor: AppConstants.whatsappGreen,
+      selectedColor: AppConstants.appGreen,
       checkmarkColor: Colors.white,
       labelStyle: TextStyle(
-        color: isActive ? Colors.white : AppConstants.whatsappGreen,
+        color: isActive ? Colors.white : AppConstants.appGreen,
         fontWeight: FontWeight.w600,
       ),
     );
@@ -257,7 +257,7 @@ class _ContactsPageState extends State<ContactsPage> {
       ),
       onPressed: _showFilterDialog,
       backgroundColor: Colors.white,
-      side: const BorderSide(color: AppConstants.whatsappGreen),
+      side: const BorderSide(color: AppConstants.appGreen),
     );
   }
 

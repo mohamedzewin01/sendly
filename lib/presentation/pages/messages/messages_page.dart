@@ -282,14 +282,14 @@ class _MessagesPageState extends State<MessagesPage> {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => _changeCategory(category),
-      selectedColor: AppConstants.whatsappGreen.withOpacity(0.2),
-      checkmarkColor: AppConstants.whatsappGreen,
+      selectedColor: AppConstants.appGreen.withOpacity(0.2),
+      checkmarkColor: AppConstants.appGreen,
       labelStyle: TextStyle(
-        color: isSelected ? AppConstants.whatsappGreen : Colors.grey[700],
+        color: isSelected ? AppConstants.appGreen : Colors.grey[700],
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? AppConstants.whatsappGreen : Colors.grey[300]!,
+        color: isSelected ? AppConstants.appGreen : Colors.grey[300]!,
       ),
     );
   }
@@ -446,7 +446,7 @@ class _MessagesPageState extends State<MessagesPage> {
               final contact = widget.contacts[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppConstants.whatsappGreen,
+                  backgroundColor: AppConstants.appGreen,
                   child: Text(
                     contact.initials,
                     style: const TextStyle(color: Colors.white),

@@ -110,7 +110,7 @@ class _MessageDialogState extends State<MessageDialog> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            gradient: AppConstants.whatsappGradient,
+            gradient: AppConstants.appGradient,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -172,14 +172,14 @@ class _MessageDialogState extends State<MessageDialog> {
       decoration: InputDecoration(
         labelText: AppStrings.messageTitle,
         hintText: AppStrings.messageTitleHint,
-        prefixIcon: const Icon(Icons.title, color: AppConstants.whatsappGreen),
+        prefixIcon: const Icon(Icons.title, color: AppConstants.appGreen),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           borderSide: const BorderSide(
-            color: AppConstants.whatsappGreen,
+            color: AppConstants.appGreen,
             width: 2,
           ),
         ),
@@ -219,7 +219,7 @@ class _MessageDialogState extends State<MessageDialog> {
         hintText: AppStrings.messageContentHint,
         prefixIcon: const Padding(
           padding: EdgeInsets.only(bottom: 60),
-          child: Icon(Icons.message, color: AppConstants.whatsappGreen),
+          child: Icon(Icons.message, color: AppConstants.appGreen),
         ),
         alignLabelWithHint: true,
         border: OutlineInputBorder(
@@ -228,7 +228,7 @@ class _MessageDialogState extends State<MessageDialog> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           borderSide: const BorderSide(
-            color: AppConstants.whatsappGreen,
+            color: AppConstants.appGreen,
             width: 2,
           ),
         ),
@@ -265,7 +265,7 @@ class _MessageDialogState extends State<MessageDialog> {
             children: [
               Icon(
                 Icons.category,
-                color: AppConstants.whatsappGreen,
+                color: AppConstants.appGreen,
                 size: isMobile ? 20 : 24,
               ),
               const SizedBox(width: 8),
@@ -284,7 +284,7 @@ class _MessageDialogState extends State<MessageDialog> {
                     _autoDetectCategory = value;
                   });
                 },
-                activeColor: AppConstants.whatsappGreen,
+                activeColor: AppConstants.appGreen,
               ),
               const SizedBox(width: 8),
               Text(
@@ -330,12 +330,12 @@ class _MessageDialogState extends State<MessageDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppConstants.whatsappGreen
+                  ? AppConstants.appGreen
                   : Colors.white,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: isSelected
-                    ? AppConstants.whatsappGreen
+                    ? AppConstants.appGreen
                     : Colors.grey.shade300,
               ),
             ),
@@ -398,7 +398,7 @@ class _MessageDialogState extends State<MessageDialog> {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.whatsappGreen,
+              backgroundColor: AppConstants.appGreen,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),

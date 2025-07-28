@@ -24,7 +24,7 @@ class EmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveHelper.isMobile(context);
-    final effectiveColor = color ?? AppConstants.whatsappGreen;
+    final effectiveColor = color ?? AppConstants.appGreen;
 
     return Center(
       child: Padding(

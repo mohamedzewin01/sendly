@@ -77,7 +77,7 @@ class _ContactDialogState extends State<ContactDialog> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            gradient: AppConstants.whatsappGradient,
+            gradient: AppConstants.appGradient,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -143,14 +143,14 @@ class _ContactDialogState extends State<ContactDialog> {
       decoration: InputDecoration(
         labelText: AppStrings.contactName,
         hintText: AppStrings.nameHint,
-        prefixIcon: const Icon(Icons.person, color: AppConstants.whatsappGreen),
+        prefixIcon: const Icon(Icons.person, color: AppConstants.appGreen),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           borderSide: const BorderSide(
-            color: AppConstants.whatsappGreen,
+            color: AppConstants.appGreen,
             width: 2,
           ),
         ),
@@ -188,7 +188,7 @@ class _ContactDialogState extends State<ContactDialog> {
       decoration: InputDecoration(
         labelText: AppStrings.contactPhone,
         hintText: AppStrings.phoneHint,
-        prefixIcon: const Icon(Icons.phone, color: AppConstants.whatsappGreen),
+        prefixIcon: const Icon(Icons.phone, color: AppConstants.appGreen),
         suffixIcon: _phoneController.text.isNotEmpty
             ? IconButton(
           icon: const Icon(Icons.clear),
@@ -204,7 +204,7 @@ class _ContactDialogState extends State<ContactDialog> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           borderSide: const BorderSide(
-            color: AppConstants.whatsappGreen,
+            color: AppConstants.appGreen,
             width: 2,
           ),
         ),
@@ -235,7 +235,7 @@ class _ContactDialogState extends State<ContactDialog> {
       decoration: InputDecoration(
         labelText: 'ملاحظة (اختيارية)',
         hintText: 'إضافة ملاحظة حول جهة الاتصال...',
-        prefixIcon: const Icon(Icons.note, color: AppConstants.whatsappGreen),
+        prefixIcon: const Icon(Icons.note, color: AppConstants.appGreen),
         alignLabelWithHint: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
@@ -243,7 +243,7 @@ class _ContactDialogState extends State<ContactDialog> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           borderSide: const BorderSide(
-            color: AppConstants.whatsappGreen,
+            color: AppConstants.appGreen,
             width: 2,
           ),
         ),
@@ -293,7 +293,7 @@ class _ContactDialogState extends State<ContactDialog> {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.whatsappGreen,
+              backgroundColor: AppConstants.appGreen,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),

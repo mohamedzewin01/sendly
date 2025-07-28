@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:sendly/core/services/messaging_service.dart';
 import '../../app/constants/app_constants.dart';
 import '../../app/constants/app_strings.dart';
 import '../../core/helpers/responsive_helper.dart';
 import '../../core/services/storage_service.dart';
-import '../../core/services/whatsapp_service.dart';
 import '../../core/utils/app_utils.dart';
 import '../../data/models/contact.dart';
 import '../../data/models/message.dart';
@@ -11,7 +11,6 @@ import '../widgets/common/custom_app_bar.dart';
 import 'contacts/contacts_page.dart';
 import 'messages/messages_page.dart';
 import 'quick_send/quick_send_page.dart';
-import 'bulk_send/bulk_send_page.dart';
 import 'settings/settings_page.dart';
 
 /// الصفحة الرئيسية للتطبيق
@@ -35,7 +34,8 @@ class _MainPageState extends State<MainPage>
 
   // الخدمات
   final StorageService _storageService = StorageService();
-  final WhatsAppService _whatsappService = WhatsAppService();
+  final MessagingService _messagingService = MessagingService(); // تم التغيير
+
 
   // حالة التحميل
   bool _isLoading = true;
@@ -168,13 +168,13 @@ class _MainPageState extends State<MainPage>
     }
   }
 
-  /// إرسال رسالة عبر الواتساب
-  Future<void> _sendWhatsAppMessage(String phone, String message) async {
+  /// إرسال رسالة
+  Future<void> _openMessagingApp(String phone, String message) async {
     try {
-      await _whatsappService.sendMessage(phone, message);
-      _showSuccessMessage(AppStrings.messageSent);
+      await _messagingService.openMessagingApp(phone, message);
+      _showSuccessMessage(AppStrings.messagingAppOpened); // تم التغيير
     } catch (e) {
-      _showErrorMessage('فشل في إرسال الرسالة: ${e.toString()}');
+      _showErrorMessage('فشل في فتح تطبيق المراسلة: ${e.toString()}'); // تم التغيير
     }
   }
 
@@ -183,7 +183,7 @@ class _MainPageState extends State<MainPage>
     try {
       for (int i = 0; i < contacts.length; i++) {
         final contact = contacts[i];
-        await _whatsappService.sendMessage(contact.phone, message);
+        await _messagingService.openMessagingApp(contact.phone, message);
 
         // تأخير بسيط بين الرسائل
         if (i < contacts.length - 1) {
@@ -320,7 +320,7 @@ class _MainPageState extends State<MainPage>
           fontWeight: FontWeight.bold,
         ),
         tabs: [
-          _buildTab(Icons.send, AppStrings.quickSendTab),
+          _buildTab(Icons.open_in_new, AppStrings.quickSendTab),
           _buildTab(Icons.contacts, AppStrings.contactsTab),
           _buildTab(Icons.message, AppStrings.messagesTab),
           // _buildTab(Icons.group, AppStrings.bulkSendTab),
@@ -350,7 +350,7 @@ class _MainPageState extends State<MainPage>
       children: [
         QuickSendPage(
           messages: _messages,
-          onSendMessage: _sendWhatsAppMessage,
+          onSendMessage: _openMessagingApp,
           onUpdateMessage: _updateMessage,
         ),
         ContactsPage(
@@ -358,14 +358,14 @@ class _MainPageState extends State<MainPage>
           onAddContact: _addContact,
           onUpdateContact: _updateContact,
           onDeleteContact: _deleteContact,
-          onSendMessage: _sendWhatsAppMessage,
+          onSendMessage: _openMessagingApp,
         ),
         MessagesPage(
           messages: _messages,
           onAddMessage: _addMessage,
           onUpdateMessage: _updateMessage,
           onDeleteMessage: _deleteMessage,
-          onSendMessage: _sendWhatsAppMessage,
+          onSendMessage: _openMessagingApp,
           contacts: _contacts,
         ),
         // BulkSendPage(

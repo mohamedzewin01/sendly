@@ -27,18 +27,19 @@ class ContactCard extends StatelessWidget {
     final isMobile = ResponsiveHelper.isMobile(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isSelected ? AppConstants.whatsappLight : Colors.white,
+        color: isSelected ? AppConstants.appLight : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: isSelected
-            ? Border.all(color: AppConstants.whatsappGreen, width: 2)
+            ? Border.all(color: AppConstants.appGreen, width: 2)
             : Border.all(color: Colors.grey.shade200, width: 1),
         boxShadow: [
           BoxShadow(
             color: isSelected
-                ? AppConstants.whatsappGreen.withOpacity(0.2)
+                ? AppConstants.appGreen.withOpacity(0.2)
                 : Colors.black.withOpacity(0.05),
             blurRadius: isSelected ? 12 : 8,
             offset: Offset(0, isSelected ? 4 : 2),
@@ -97,14 +98,14 @@ class ContactCard extends StatelessWidget {
         height: 50,
         decoration: BoxDecoration(
           gradient: isSelected
-              ? AppConstants.whatsappGradient
+              ? AppConstants.appGradient
               : LinearGradient(
             colors: [Colors.grey.shade300, Colors.grey.shade400],
           ),
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: (isSelected ? AppConstants.whatsappGreen : Colors.grey)
+              color: (isSelected ? AppConstants.appGreen : Colors.grey)
                   .withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 2),
@@ -132,7 +133,7 @@ class ContactCard extends StatelessWidget {
       style: TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 16,
-        color: isSelected ? AppConstants.whatsappDarkGreen : Colors.black87,
+        color: isSelected ? AppConstants.appDarkGreen : Colors.black87,
       ),
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
@@ -148,7 +149,7 @@ class ContactCard extends StatelessWidget {
           contact.displayPhone,
           style: TextStyle(
             color: isSelected
-                ? AppConstants.whatsappDarkGreen.withOpacity(0.8)
+                ? AppConstants.appDarkGreen.withOpacity(0.8)
                 : Colors.grey[600],
             fontSize: 14,
           ),
@@ -192,7 +193,7 @@ class ContactCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: isSelected
-            ? AppConstants.whatsappGreen.withOpacity(0.2)
+            ? AppConstants.appGreen.withOpacity(0.2)
             : Colors.blue.shade50,
         borderRadius: BorderRadius.circular(8),
       ),
@@ -201,7 +202,7 @@ class ContactCard extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           color: isSelected
-              ? AppConstants.whatsappDarkGreen
+              ? AppConstants.appDarkGreen
               : Colors.blue.shade700,
         ),
         maxLines: 1,
@@ -239,7 +240,7 @@ class ContactCard extends StatelessWidget {
     if (onMessage != null && actionCount < maxActions) {
       actions.add(_buildActionButton(
         Icons.message,
-        AppConstants.whatsappGreen,
+        AppConstants.appGreen,
         onMessage!,
         'إرسال رسالة',
         isMobile,
@@ -284,7 +285,7 @@ class ContactCard extends StatelessWidget {
       actions.add(
         Icon(
           Icons.check_circle,
-          color: AppConstants.whatsappGreen,
+          color: AppConstants.appGreen,
           size: isMobile ? 18 : 20,
         ),
       );
@@ -298,7 +299,7 @@ class ContactCard extends StatelessWidget {
     if (onMessage != null) {
       return _buildActionButton(
         Icons.message,
-        AppConstants.whatsappGreen,
+        AppConstants.appGreen,
         onMessage!,
         'إرسال رسالة',
         isMobile,
@@ -349,9 +350,9 @@ class ContactCard extends StatelessWidget {
               value: 'message',
               child: Row(
                 children: [
-                  Icon(Icons.message, color: AppConstants.whatsappGreen),
+                  Icon(Icons.chat, color: AppConstants.appGreen),
                   SizedBox(width: 8),
-                  Text('إرسال رسالة'),
+                  Text('فتح محادثة'),
                 ],
               ),
             ),

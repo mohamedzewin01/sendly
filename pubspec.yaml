@@ -1,11 +1,11 @@
 name: sendly
-description: "A new Flutter project."
+description: "مساعد ذكي لإدارة جهات الاتصال والرسائل مع إمكانية الإرسال السريع"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 
-version: 1.0.7+7
+version: 1.0.9+9
 
 
 
@@ -27,6 +27,7 @@ dependencies:
   flutter_native_splash: ^2.4.6
   flutter_launcher_icons: ^0.14.4
   device_preview: ^1.2.0
+
 
 flutter_launcher_icons:
   android: "launcher_icon"

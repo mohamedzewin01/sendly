@@ -1,3 +1,4 @@
+
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -24,9 +25,9 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  // runApp(DevicePreview(
-  //   enabled: !kReleaseMode,
-  //   builder: (context) => WhatsAppHelperApp(),
-  // ));
-  runApp(const WhatsAppHelperApp());
+  runApp(DevicePreview(
+    enabled: !kReleaseMode,
+    builder: (context) => appHelperApp(),
+  ));
+  // runApp(const appHelperApp());
 }

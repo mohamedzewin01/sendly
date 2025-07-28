@@ -28,7 +28,7 @@ class AppUtils {
       backgroundColor = AppConstants.warningOrange;
       icon = Icons.warning_outlined;
     } else {
-      backgroundColor = AppConstants.whatsappGreen;
+      backgroundColor = AppConstants.appGreen;
       icon = Icons.info_outline;
     }
 
@@ -83,7 +83,7 @@ class AppUtils {
           icon,
           color: isDestructive
               ? AppConstants.errorRed
-              : AppConstants.whatsappGreen,
+              : AppConstants.appGreen,
           size: AppConstants.iconLarge,
         )
             : null,
@@ -106,7 +106,7 @@ class AppUtils {
             style: ElevatedButton.styleFrom(
               backgroundColor: isDestructive
                   ? AppConstants.errorRed
-                  : AppConstants.whatsappGreen,
+                  : AppConstants.appGreen,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
@@ -265,7 +265,7 @@ class AppUtils {
             children: [
               const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  AppConstants.whatsappGreen,
+                  AppConstants.appGreen,
                 ),
               ),
               const SizedBox(height: AppConstants.defaultPadding),
