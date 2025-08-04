@@ -611,8 +611,8 @@ class _QuickSendPageState extends State<QuickSendPage>
       }
 
       // مسح الحقول
-      _phoneController.clear();
-      _messageController.clear();
+      // _phoneController.clear();
+      // _messageController.clear();
       setState(() {
         _selectedMessageId = null;
       });

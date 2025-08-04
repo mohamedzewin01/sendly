@@ -169,14 +169,185 @@ class _MainPageState extends State<MainPage>
   }
 
   /// إرسال رسالة
+  /// نسخة مبسطة من BottomSheet لاختيار تطبيق المراسلة
   Future<void> _openMessagingApp(String phone, String message) async {
     try {
-      await _messagingService.openMessagingApp(phone, message);
-      _showSuccessMessage(AppStrings.messagingAppOpened); // تم التغيير
+      await showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              Text(
+                'اختر طريقة المشاركة',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'إلى: $phone',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Messaging App Button 1 - WhatsApp
+              _buildAppButton(
+                context: context,
+                title: 'فتح تطبيق رسالة فورية',
+                icon: Icons.message_outlined,
+                color: Colors.green.shade600,
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _launchApp(MessagingPlatform.whatsapp, phone, message);
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              // Messaging App Button 2 - Telegram
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildAppButton(
+                      context: context,
+                      title: 'فتح تطبيق دردشة',
+                      icon: Icons.chat_bubble_outline,
+                      color: Colors.blue.shade700,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _launchApp(MessagingPlatform.telegram, phone, message);
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // SMS Button
+                  Expanded(
+                    child: _buildAppButton(
+                      context: context,
+                      title: 'فتح تطبيقات اخرى',
+                      icon: Icons.sms_outlined,
+                      color: Colors.deepOrange.shade600,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _launchApp(MessagingPlatform.sms, phone, message);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Cancel Button
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'إلغاء',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
+            ],
+          ),
+        ),
+      );
     } catch (e) {
-      _showErrorMessage('فشل في فتح تطبيق المراسلة: ${e.toString()}'); // تم التغيير
+      _showErrorMessage('فشل في عرض خيارات المراسلة: ${e.toString()}');
     }
   }
+
+
+
+  /// بناء زر التطبيق
+  Widget _buildAppButton({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, color: Colors.white),
+        label: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+        ),
+      ),
+    );
+  }
+
+  /// فتح التطبيق المحدد
+  Future<void> _launchApp(
+      MessagingPlatform platform,
+      String phone,
+      String message,
+      ) async {
+    try {
+      final success = await _messagingService.openMessagingApp(
+        phone,
+        message,
+        platform: platform,
+      );
+
+      if (success) {
+        String platformName = _getPlatformName(platform);
+        _showSuccessMessage('تم فتح $platformName بنجاح');
+      } else {
+        _showErrorMessage('فشل في فتح التطبيق المحدد');
+      }
+    } catch (e) {
+      _showErrorMessage('فشل في فتح تطبيق المراسلة: ${e.toString()}');
+    }
+  }
+
+  /// الحصول على اسم المنصة بالعربية
+  String _getPlatformName(MessagingPlatform platform) {
+    switch (platform) {
+      case MessagingPlatform.whatsapp:
+        return 'الواتساب';
+      case MessagingPlatform.telegram:
+        return 'التليجرام';
+      case MessagingPlatform.sms:
+        return 'الرسائل النصية';
+      case MessagingPlatform.auto:
+        return 'التطبيق المناسب';
+    }
+  }
+  // Future<void> _openMessagingApp(String phone, String message) async {
+  //   try {
+  //     await _messagingService.openMessagingApp(phone, message);
+  //     _showSuccessMessage(AppStrings.messagingAppOpened); // تم التغيير
+  //   } catch (e) {
+  //     _showErrorMessage('فشل في فتح تطبيق المراسلة: ${e.toString()}'); // تم التغيير
+  //   }
+  // }
 
   /// عرض رسالة نجاح
   void _showSuccessMessage(String message) {
