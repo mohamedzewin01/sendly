@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sendly/core/services/messaging_service.dart';
+import 'package:sendly/core/utils/remote_config.dart';
 import '../../app/constants/app_constants.dart';
 import '../../app/constants/app_strings.dart';
 import '../../core/helpers/responsive_helper.dart';
@@ -43,6 +44,7 @@ class _MainPageState extends State<MainPage>
   @override
   void initState() {
     super.initState();
+    ForceUpdateChecker().checkForUpdate(context);
     _initializeControllers();
     _loadData();
   }

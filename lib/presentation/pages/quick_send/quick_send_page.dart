@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sendly/core/utils/ad_manger.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:sendly/core/utils/ad_mob/ad_manger.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/constants/app_strings.dart';
 import '../../../core/helpers/responsive_helper.dart';
@@ -32,10 +33,52 @@ class _QuickSendPageState extends State<QuickSendPage>
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
-
+  BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
+  BannerAd? _bannerAd2;
+  bool _isBannerAdLoaded2 = false;
 
 
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdManger.bannerHome1,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() {
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+          setState(() {
+            _isBannerAdLoaded = false;
+          });
+        },
+      ),
+    )..load();
+    _bannerAd2 = BannerAd(
+      adUnitId: AdManger.bannerHome2,
+      size: AdSize.mediumRectangle,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() {
+            _isBannerAdLoaded2 = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+          setState(() {
+            _isBannerAdLoaded2 = false;
+          });
+        },
+      ),
+    )..load();
+
+
+  }
 
   String? _selectedMessageId;
 
@@ -44,6 +87,7 @@ class _QuickSendPageState extends State<QuickSendPage>
     super.initState();
 
     _initializeAnimations();
+    _loadBannerAd();
   }
 
   void _initializeAnimations() {
@@ -62,8 +106,6 @@ class _QuickSendPageState extends State<QuickSendPage>
 
     _animationController.forward();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -93,14 +135,35 @@ class _QuickSendPageState extends State<QuickSendPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildMainCard(context, isMobile),
+
+                      _isBannerAdLoaded
+                          ? Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: SizedBox(
+                                height: _bannerAd!.size.height.toDouble(),
+                                width: _bannerAd!.size.width.toDouble(),
+                                child: AdWidget(ad: _bannerAd!),
+                              ),
+                          )
+                          : SizedBox(),
                       if (widget.messages.isNotEmpty) ...[
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 6),
                         _buildSavedMessagesSection(context, isMobile),
                       ],
                       const SizedBox(height: 5),
+                      _isBannerAdLoaded2
+                          ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: SizedBox(
+                          height: _bannerAd2!.size.height.toDouble(),
+                          width: _bannerAd2!.size.width.toDouble(),
+                          child: AdWidget(ad: _bannerAd2!),
+                        ),
+                      )
+                          : SizedBox(),
 
+                      // _buildQuickTipsSection(isMobile),
 
-                      _buildQuickTipsSection(isMobile),
                     ],
                   ),
                 ),
@@ -243,10 +306,7 @@ class _QuickSendPageState extends State<QuickSendPage>
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: AppConstants.appGreen,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: AppConstants.appGreen, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -277,10 +337,7 @@ class _QuickSendPageState extends State<QuickSendPage>
       decoration: InputDecoration(
         labelText: AppStrings.messageText,
         hintText: AppStrings.messageContentHint,
-        prefixIcon: const Icon(
-          Icons.message,
-          color: AppConstants.appGreen,
-        ),
+        prefixIcon: const Icon(Icons.message, color: AppConstants.appGreen),
         suffixIcon: _messageController.text.isNotEmpty
             ? IconButton(
                 icon: const Icon(Icons.clear),
@@ -295,10 +352,7 @@ class _QuickSendPageState extends State<QuickSendPage>
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: AppConstants.appGreen,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: AppConstants.appGreen, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -314,8 +368,8 @@ class _QuickSendPageState extends State<QuickSendPage>
 
   /// بناء زر الإرسال
   Widget _buildSendButton(bool isMobile) {
-    final isValid = _phoneController.text.isNotEmpty &&
-        _messageController.text.isNotEmpty;
+    final isValid =
+        _phoneController.text.isNotEmpty && _messageController.text.isNotEmpty;
 
     return SizedBox(
       width: double.infinity,
@@ -381,9 +435,7 @@ class _QuickSendPageState extends State<QuickSendPage>
                   width: isMobile ? 220 : 260,
                   margin: const EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppConstants.appLight
-                        : Colors.white,
+                    color: isSelected ? AppConstants.appLight : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isSelected
@@ -449,9 +501,7 @@ class _QuickSendPageState extends State<QuickSendPage>
                             message.content,
                             style: TextStyle(
                               color: isSelected
-                                  ? AppConstants.appDarkGreen.withOpacity(
-                                      0.8,
-                                    )
+                                  ? AppConstants.appDarkGreen.withOpacity(0.8)
                                   : Colors.grey[600],
                               fontSize: isMobile ? 12 : 14,
                               height: 1.4,
@@ -471,9 +521,7 @@ class _QuickSendPageState extends State<QuickSendPage>
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AppConstants.appGreen.withOpacity(
-                                        0.2,
-                                      )
+                                    ? AppConstants.appGreen.withOpacity(0.2)
                                     : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -543,7 +591,6 @@ class _QuickSendPageState extends State<QuickSendPage>
           const SizedBox(height: 12),
           _buildTip('احفظ رسائلك المتكررة لاستخدامها بسرعة'),
           _buildTip('يمكنك مسح الحقول بالضغط على أيقونة X'),
-
         ],
       ),
     );
@@ -629,10 +676,7 @@ class _QuickSendPageState extends State<QuickSendPage>
     _phoneController.dispose();
     _messageController.dispose();
     _animationController.dispose();
-
-
+    _bannerAd?.dispose();
     super.dispose();
   }
 }
-
-
