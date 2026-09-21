@@ -1,55 +1,202 @@
-
 ///
 /// مساعد لتنسيق والتحقق من أرقام الهواتف الدولية
 class PhoneNumberFormatter {
   // خريطة رموز الدول مع أطوال أرقامها المتوقعة
   static final Map<String, Map<String, dynamic>> _countryCodes = {
     // الدول العربية
-    '+966': {'name': 'السعودية', 'length': [9], 'localPrefix': '0'},
-    '+971': {'name': 'الإمارات', 'length': [9], 'localPrefix': '0'},
-    '+968': {'name': 'عُمان', 'length': [8], 'localPrefix': '0'},
-    '+965': {'name': 'الكويت', 'length': [8], 'localPrefix': '0'},
-    '+973': {'name': 'البحرين', 'length': [8], 'localPrefix': '0'},
-    '+974': {'name': 'قطر', 'length': [8], 'localPrefix': '0'},
-    '+20': {'name': 'مصر', 'length': [10], 'localPrefix': '0'},
-    '+962': {'name': 'الأردن', 'length': [9], 'localPrefix': '0'},
-    '+961': {'name': 'لبنان', 'length': [8], 'localPrefix': '0'},
-    '+963': {'name': 'سوريا', 'length': [9], 'localPrefix': '0'},
-    '+964': {'name': 'العراق', 'length': [10], 'localPrefix': '0'},
-    '+967': {'name': 'اليمن', 'length': [9], 'localPrefix': '0'},
-    '+212': {'name': 'المغرب', 'length': [9], 'localPrefix': '0'},
-    '+213': {'name': 'الجزائر', 'length': [9], 'localPrefix': '0'},
-    '+216': {'name': 'تونس', 'length': [8], 'localPrefix': '0'},
-    '+218': {'name': 'ليبيا', 'length': [9], 'localPrefix': '0'},
-    '+249': {'name': 'السودان', 'length': [9], 'localPrefix': '0'},
+    '+966': {
+      'name': 'السعودية',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+971': {
+      'name': 'الإمارات',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+968': {
+      'name': 'عُمان',
+      'length': [8],
+      'localPrefix': '0',
+    },
+    '+965': {
+      'name': 'الكويت',
+      'length': [8],
+      'localPrefix': '0',
+    },
+    '+973': {
+      'name': 'البحرين',
+      'length': [8],
+      'localPrefix': '0',
+    },
+    '+974': {
+      'name': 'قطر',
+      'length': [8],
+      'localPrefix': '0',
+    },
+    '+20': {
+      'name': 'مصر',
+      'length': [10],
+      'localPrefix': '0',
+    },
+    '+962': {
+      'name': 'الأردن',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+961': {
+      'name': 'لبنان',
+      'length': [8],
+      'localPrefix': '0',
+    },
+    '+963': {
+      'name': 'سوريا',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+964': {
+      'name': 'العراق',
+      'length': [10],
+      'localPrefix': '0',
+    },
+    '+967': {
+      'name': 'اليمن',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+212': {
+      'name': 'المغرب',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+213': {
+      'name': 'الجزائر',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+216': {
+      'name': 'تونس',
+      'length': [8],
+      'localPrefix': '0',
+    },
+    '+218': {
+      'name': 'ليبيا',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+249': {
+      'name': 'السودان',
+      'length': [9],
+      'localPrefix': '0',
+    },
 
     // الدول الأوروبية والعالمية
-    '+1': {'name': 'أمريكا/كندا', 'length': [10], 'localPrefix': ''},
-    '+44': {'name': 'بريطانيا', 'length': [10, 11], 'localPrefix': '0'},
-    '+33': {'name': 'فرنسا', 'length': [9], 'localPrefix': '0'},
-    '+49': {'name': 'ألمانيا', 'length': [10, 11], 'localPrefix': '0'},
-    '+39': {'name': 'إيطاليا', 'length': [9, 10], 'localPrefix': '0'},
-    '+34': {'name': 'إسبانيا', 'length': [9], 'localPrefix': '0'},
-    '+7': {'name': 'روسيا', 'length': [10], 'localPrefix': '8'},
-    '+86': {'name': 'الصين', 'length': [11], 'localPrefix': '0'},
-    '+81': {'name': 'اليابان', 'length': [10, 11], 'localPrefix': '0'},
-    '+82': {'name': 'كوريا الجنوبية', 'length': [10, 11], 'localPrefix': '0'},
-    '+91': {'name': 'الهند', 'length': [10], 'localPrefix': '0'},
-    '+92': {'name': 'باكستان', 'length': [10], 'localPrefix': '0'},
-    '+98': {'name': 'إيران', 'length': [10], 'localPrefix': '0'},
-    '+90': {'name': 'تركيا', 'length': [10], 'localPrefix': '0'},
-    '+60': {'name': 'ماليزيا', 'length': [9, 10], 'localPrefix': '0'},
-    '+65': {'name': 'سنغافورة', 'length': [8], 'localPrefix': '0'},
-    '+852': {'name': 'هونغ كونغ', 'length': [8], 'localPrefix': '0'},
-    '+61': {'name': 'أستراليا', 'length': [9], 'localPrefix': '0'},
-    '+64': {'name': 'نيوزيلندا', 'length': [8, 9], 'localPrefix': '0'},
+    '+1': {
+      'name': 'أمريكا/كندا',
+      'length': [10],
+      'localPrefix': '',
+    },
+    '+44': {
+      'name': 'بريطانيا',
+      'length': [10, 11],
+      'localPrefix': '0',
+    },
+    '+33': {
+      'name': 'فرنسا',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+49': {
+      'name': 'ألمانيا',
+      'length': [10, 11],
+      'localPrefix': '0',
+    },
+    '+39': {
+      'name': 'إيطاليا',
+      'length': [9, 10],
+      'localPrefix': '0',
+    },
+    '+34': {
+      'name': 'إسبانيا',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+7': {
+      'name': 'روسيا',
+      'length': [10],
+      'localPrefix': '8',
+    },
+    '+86': {
+      'name': 'الصين',
+      'length': [11],
+      'localPrefix': '0',
+    },
+    '+81': {
+      'name': 'اليابان',
+      'length': [10, 11],
+      'localPrefix': '0',
+    },
+    '+82': {
+      'name': 'كوريا الجنوبية',
+      'length': [10, 11],
+      'localPrefix': '0',
+    },
+    '+91': {
+      'name': 'الهند',
+      'length': [10],
+      'localPrefix': '0',
+    },
+    '+92': {
+      'name': 'باكستان',
+      'length': [10],
+      'localPrefix': '0',
+    },
+    '+98': {
+      'name': 'إيران',
+      'length': [10],
+      'localPrefix': '0',
+    },
+    '+90': {
+      'name': 'تركيا',
+      'length': [10],
+      'localPrefix': '0',
+    },
+    '+60': {
+      'name': 'ماليزيا',
+      'length': [9, 10],
+      'localPrefix': '0',
+    },
+    '+65': {
+      'name': 'سنغافورة',
+      'length': [8],
+      'localPrefix': '0',
+    },
+    '+852': {
+      'name': 'هونغ كونغ',
+      'length': [8],
+      'localPrefix': '0',
+    },
+    '+61': {
+      'name': 'أستراليا',
+      'length': [9],
+      'localPrefix': '0',
+    },
+    '+64': {
+      'name': 'نيوزيلندا',
+      'length': [8, 9],
+      'localPrefix': '0',
+    },
   };
 
   // مقدمات شركات الاتصال في السعودية
   static final Map<String, String> _saudiCarriers = {
-    '50': 'STC', '53': 'STC', '56': 'STC',
-    '51': 'Mobily', '54': 'Mobily',
-    '55': 'Zain', '58': 'Zain',
+    '50': 'STC',
+    '53': 'STC',
+    '56': 'STC',
+    '51': 'Mobily',
+    '54': 'Mobily',
+    '55': 'Zain',
+    '58': 'Zain',
     '57': 'Virgin Mobile',
     '59': 'Lebara',
   };
@@ -60,13 +207,16 @@ class PhoneNumberFormatter {
     '12': 'Orange Egypt',
     '11': 'Etisalat Egypt',
     '15': 'WE Egypt',
-
   };
 
   // مقدمات شركات الاتصال في الإمارات
   static final Map<String, String> _uaeCarriers = {
-    '50': 'Etisalat', '52': 'Etisalat', '55': 'Etisalat', '56': 'Etisalat',
-    '54': 'du', '58': 'du',
+    '50': 'Etisalat',
+    '52': 'Etisalat',
+    '55': 'Etisalat',
+    '56': 'Etisalat',
+    '54': 'du',
+    '58': 'du',
   };
 
   static final RegExp _digitOnlyPattern = RegExp(r'[^\d+]');
@@ -92,7 +242,9 @@ class PhoneNumberFormatter {
       String codeWithoutPlus = countryCode.substring(1);
       if (clean.startsWith(codeWithoutPlus)) {
         String remainingNumber = clean.substring(codeWithoutPlus.length);
-        List<int> validLengths = List<int>.from(_countryCodes[countryCode]!['length']);
+        List<int> validLengths = List<int>.from(
+          _countryCodes[countryCode]!['length'],
+        );
 
         // التحقق من أن الرقم المتبقي له طول صحيح
         if (validLengths.contains(remainingNumber.length)) {
@@ -182,7 +334,9 @@ class PhoneNumberFormatter {
     for (String countryCode in _countryCodes.keys) {
       if (phone.startsWith(countryCode)) {
         String number = phone.substring(countryCode.length);
-        List<int> validLengths = List<int>.from(_countryCodes[countryCode]!['length']);
+        List<int> validLengths = List<int>.from(
+          _countryCodes[countryCode]!['length'],
+        );
 
         if (validLengths.contains(number.length)) {
           return phone;
@@ -208,7 +362,9 @@ class PhoneNumberFormatter {
     for (String countryCode in _countryCodes.keys) {
       if (formatted.startsWith(countryCode)) {
         String number = formatted.substring(countryCode.length);
-        List<int> validLengths = List<int>.from(_countryCodes[countryCode]!['length']);
+        List<int> validLengths = List<int>.from(
+          _countryCodes[countryCode]!['length'],
+        );
         return validLengths.contains(number.length);
       }
     }
@@ -323,19 +479,6 @@ class PhoneNumberFormatter {
     return format(phone1) == format(phone2);
   }
 
-  /// تحويل الرقم إلى رابط
-  static String toappUrl(String phone, [String? message]) {
-    final formatted = getInternationalNumber(phone);
-    final baseUrl = 'https://wa.me/$formatted';
-
-    if (message != null && message.isNotEmpty) {
-      final encodedMessage = Uri.encodeComponent(message);
-      return '$baseUrl?text=$encodedMessage';
-    }
-
-    return baseUrl;
-  }
-
   /// تحويل الرقم إلى رابط اتصال
   static String toCallUrl(String phone) {
     return 'tel:${format(phone)}';
@@ -347,22 +490,20 @@ class PhoneNumberFormatter {
     '+966501234567', // السعودية
     '+971501234567', // الإمارات
     '+201012345678', // مصر
-    '+14155552671',  // أمريكا
+    '+14155552671', // أمريكا
     '+447911123456', // بريطانيا
     '+8613800138000', // الصين
-
     // بدون علامة +
-    '966501234567',  // السعودية
-    '971501234567',  // الإمارات
-    '201012345678',  // مصر
-    '14155552671',   // أمريكا
-    '447911123456',  // بريطانيا
-
+    '966501234567', // السعودية
+    '971501234567', // الإمارات
+    '201012345678', // مصر
+    '14155552671', // أمريكا
+    '447911123456', // بريطانيا
     // أرقام محلية
-    '0501234567',    // السعودية محلي
-    '01012345678',   // مصر محلي
-    '4155552671',    // أمريكا بدون 1
-    '07911123456',   // بريطانيا محلي
+    '0501234567', // السعودية محلي
+    '01012345678', // مصر محلي
+    '4155552671', // أمريكا بدون 1
+    '07911123456', // بريطانيا محلي
   ];
 
   /// قائمة بأمثلة على أرقام خاطئة
@@ -402,16 +543,17 @@ class PhoneNumberFormatter {
 
   /// الحصول على قائمة الدول المدعومة
   static List<Map<String, dynamic>> getSupportedCountries() {
-    return _countryCodes.entries.map((entry) => {
-      'code': entry.key,
-      'name': entry.value['name'],
-    }).toList();
+    return _countryCodes.entries
+        .map((entry) => {'code': entry.key, 'name': entry.value['name']})
+        .toList();
   }
 
   /// البحث عن دولة بالاسم
   static String? findCountryCode(String countryName) {
     for (var entry in _countryCodes.entries) {
-      if (entry.value['name'].toLowerCase().contains(countryName.toLowerCase())) {
+      if (entry.value['name'].toLowerCase().contains(
+        countryName.toLowerCase(),
+      )) {
         return entry.key;
       }
     }

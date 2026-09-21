@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/constants/app_constants.dart';
 import '../../data/models/contact.dart';
@@ -16,6 +17,10 @@ class StorageService {
     _instance ??= StorageService._internal();
     return _instance!;
   }
+
+  /// يمسح المثيل المحفوظ (للاختبارات فقط)
+  @visibleForTesting
+  static void resetForTesting() => _instance = null;
 
   /// تهيئة الخدمة
   Future<void> init() async {
@@ -337,13 +342,18 @@ class StorageService {
       'validPhonesCount': contacts.where((c) => c.hasValidPhone).length,
       'totalCharacters': dataSize['total'],
       'averageMessageLength': messages.isNotEmpty
-          ? messages.map((m) => m.length).reduce((a, b) => a + b) / messages.length
+          ? messages.map((m) => m.length).reduce((a, b) => a + b) /
+                messages.length
           : 0,
       'oldestContactDate': contacts.isNotEmpty
-          ? contacts.map((c) => c.createdAt).reduce((a, b) => a.isBefore(b) ? a : b)
+          ? contacts
+                .map((c) => c.createdAt)
+                .reduce((a, b) => a.isBefore(b) ? a : b)
           : null,
       'newestContactDate': contacts.isNotEmpty
-          ? contacts.map((c) => c.createdAt).reduce((a, b) => a.isAfter(b) ? a : b)
+          ? contacts
+                .map((c) => c.createdAt)
+                .reduce((a, b) => a.isAfter(b) ? a : b)
           : null,
     };
   }

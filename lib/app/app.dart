@@ -1,74 +1,71 @@
 import 'package:flutter/material.dart';
-import '../app/constants/app_constants.dart';
-import '../app/constants/app_strings.dart';
-import '../presentation/pages/main_page.dart';
-import '../presentation/widgets/message/message_card.dart'; // لاستيراد navigatorKey
+import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
-class appHelperApp extends StatelessWidget {
-  const appHelperApp({super.key});
+import '../presentation/pages/main_page.dart';
+import '../providers/app_provider.dart';
+import 'constants/app_strings.dart';
+import 'theme/app_palette.dart';
+import 'theme/app_theme.dart';
+
+class SendlyApp extends StatefulWidget {
+  const SendlyApp({super.key});
+
+  @override
+  State<SendlyApp> createState() => _SendlyAppState();
+}
+
+class _SendlyAppState extends State<SendlyApp> {
+  final AppController _controller = AppController()..load();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppStrings.appTitle,
-      debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey, // إضافة navigatorKey
-      theme: _buildTheme(),
-      home: const MainPage(),
-      builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: child!,
-        );
-      },
-    );
-  }
+    return AppScope(
+      controller: _controller,
+      child: ListenableBuilder(
+        listenable: _controller,
+        builder: (context, _) => MaterialApp(
+          title: AppStrings.appTitle,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: _controller.themeMode,
+          locale: const Locale('ar'),
+          supportedLocales: const [Locale('ar')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          builder: (context, child) {
+            final p = context.palette;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  ThemeData _buildTheme() {
-    return ThemeData(
-      primarySwatch: Colors.green,
-      fontFamily: 'Cairo',
-      visualDensity: VisualDensity.adaptivePlatformDensity,
-      appBarTheme: const AppBarTheme(
-        elevation: 0,
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: isDark
+                    ? Brightness.light
+                    : Brightness.dark,
+                statusBarBrightness: isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+                systemNavigationBarColor: p.bg,
+                systemNavigationBarIconBrightness: isDark
+                    ? Brightness.light
+                    : Brightness.dark,
+              ),
+              child: child!,
+            );
+          },
+          home: const MainPage(),
         ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          elevation: 2,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor: Colors.grey[100],
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-      cardTheme: CardThemeData(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      ),
-      dividerTheme: const DividerThemeData(
-        color: Colors.grey,
-        thickness: 0.5,
-        space: 1,
       ),
     );
   }

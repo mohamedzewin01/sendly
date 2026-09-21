@@ -5,7 +5,7 @@ description: "مساعد ذكي لإدارة جهات الاتصال والرس�
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 
-version: 1.0.10+10
+version: 1.0.11+11
 
 
 
@@ -16,40 +16,27 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
 
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.2
   url_launcher: ^6.3.1
-  file_picker: ^10.2.0
-  path_provider: ^2.1.5
-  share_plus: ^11.0.0
   flutter_native_splash: ^2.4.6
   flutter_launcher_icons: ^0.14.4
-  device_preview: ^1.2.0
   firebase_core: ^4.0.0
-  google_mobile_ads: ^6.0.0
   firebase_remote_config: ^6.0.0
   package_info_plus: ^8.3.0
-
-
+  google_mobile_ads: ^9.1.0
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/branding/app_icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#1130A7"
+  adaptive_icon_foreground: "assets/branding/app_icon_foreground.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
-  web:
-    generate: true
-    image_path: "assets/images/logo.png"
-    background_color: "#ffffff"
-    theme_color: "#ffffff"
-  windows:
-    generate: true
-    image_path: "assets/images/logo.png"
-    icon_size: 48
-  macos:
-    generate: true
-    image_path: "assets/images/logo.png"
 
 dev_dependencies:
   flutter_test:
@@ -65,5 +52,16 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/
     - assets/images/
+
+  # خط IBM Plex Sans Arabic (ترخيص SIL OFL 1.1 — انظر assets/fonts/OFL.txt)
+  fonts:
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal-Regular.ttf
+        - asset: assets/fonts/Tajawal-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Tajawal-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Tajawal-ExtraBold.ttf
+          weight: 800

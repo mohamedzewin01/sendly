@@ -1,1179 +1,630 @@
-
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../../app/constants/app_constants.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
 import '../../../app/constants/app_strings.dart';
-import '../../../core/helpers/responsive_helper.dart';
+import '../../../app/theme/app_palette.dart';
+import '../../../assets_manager.dart';
 import '../../../core/helpers/statistics_helper.dart';
-import '../../../core/utils/app_utils.dart';
-import '../../../data/models/contact.dart';
-import '../../../data/models/message.dart';
+import '../../../core/services/ads_service.dart';
+import '../../../core/utils/app_links.dart';
+import '../../../providers/app_provider.dart';
+import '../../widgets/common/ad_banner.dart';
+import '../../widgets/common/app_card.dart';
+import '../../widgets/common/app_feedback.dart';
+import '../../widgets/common/motion.dart';
+import '../../widgets/common/page_header.dart';
+import 'ad_free_sheet.dart';
+import 'child_safety_page.dart';
+import 'privacy_policy_sheet.dart';
 
-/// صفحة الإعدادات
+/// صفحة الإعدادات: نظرة عامة، المظهر، عن التطبيق، والبيانات
 class SettingsPage extends StatefulWidget {
-  final List<Contact> contacts;
-  final List<Message> messages;
-  final VoidCallback onExportContacts;
-  final VoidCallback onExportMessages;
-  final VoidCallback onImportContacts;
-  final VoidCallback onImportMessages;
-  final VoidCallback onClearAllData;
-
-  const SettingsPage({
-    super.key,
-    required this.contacts,
-    required this.messages,
-    required this.onExportContacts,
-    required this.onExportMessages,
-    required this.onImportContacts,
-    required this.onImportMessages,
-    required this.onClearAllData,
-  });
+  const SettingsPage({super.key});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage>
-    with SingleTickerProviderStateMixin {
+class _SettingsPageState extends State<SettingsPage> {
+  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
 
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+  Future<void> _clearAll() async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'مسح جميع البيانات',
+      message: AppStrings.confirmClearData,
+      confirmText: 'مسح الكل',
+      destructive: true,
+      icon: Icons.delete_forever_rounded,
+    );
+    if (!confirmed || !mounted) return;
 
-  @override
-  void initState() {
-    super.initState();
-    _initializeAnimations();
+    await runGuarded(
+      context,
+      AppScope.read(context).clearAll,
+      success: AppStrings.dataCleared,
+    );
   }
 
-  void _initializeAnimations() {
-    _animationController = AnimationController(
-      duration: AppConstants.normalAnimation,
-      vsync: this,
+  Future<void> _contactUs() async {
+    final opened = await AppLinks.email(
+      subject: 'استفسار عن تطبيق ${AppStrings.appTitle}',
     );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeIn,
-    ));
-
-    _animationController.forward();
+    if (!opened && mounted) {
+      AppSnack.error(context, 'لا يمكن فتح تطبيق البريد');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final padding = ResponsiveHelper.getResponsivePadding(context);
-    final isMobile = ResponsiveHelper.isMobile(context);
+    final controller = AppScope.of(context);
+    final hasData =
+        controller.contacts.isNotEmpty || controller.messages.isNotEmpty;
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFF8F9FA), Color(0xFFE8F5E8)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final sections = <Widget>[
+      _BrandCard(packageInfo: _packageInfo),
+      const _SectionTitle('نظرة عامة'),
+      _StatsGrid(controller: controller),
+      const _SectionTitle('المظهر'),
+      _ThemeCard(controller: controller),
+      ListenableBuilder(
+        listenable: AdsService.instance,
+        builder: (context, _) {
+          final ads = AdsService.instance;
+          if (!ads.canOfferReward) return const SizedBox.shrink();
+          final until = ads.adFreeUntil;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildStatisticsSection(context, isMobile),
-              const SizedBox(height: 24),
-              _buildAboutUsSection(context, isMobile),
-              const SizedBox(height: 24),
-              _buildPrivacyPolicySection(context, isMobile),
-              const SizedBox(height: 24),
-              _buildDangerZoneSection(context, isMobile),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// بناء قسم الإحصائيات
-  Widget _buildStatisticsSection(BuildContext context, bool isMobile) {
-    final contactStats = StatisticsHelper.getContactStatistics(widget.contacts);
-    final messageStats = StatisticsHelper.getMessageStatistics(widget.messages);
-    final appStats = StatisticsHelper.getAppUsageStatistics(widget.contacts, widget.messages);
-
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 20 : 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: AppConstants.appGradient,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.analytics,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.appStatistics,
-                      style: TextStyle(
-                        fontSize: isMobile ? 18 : 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    // Text(
-                    //   'حالة البيانات: ${appStats.healthStatus}',
-                    //   style: TextStyle(
-                    //     color: AppUtils.getStatusColor(appStats.healthStatus.toLowerCase()),
-                    //     fontWeight: FontWeight.w600,
-                    //   ),
-                    // ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // شبكة الإحصائيات
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: isMobile ? 2 : 4,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: isMobile ? 1.2 : 1.5,
-            children: [
-              _buildStatCard(
-                'جهات الاتصال',
-                contactStats.total.toString(),
-                Icons.contacts,
-                AppConstants.appGreen,
-              ),
-              _buildStatCard(
-                'الرسائل المحفوظة',
-                messageStats.total.toString(),
-                Icons.message,
-                AppConstants.warningOrange,
-              ),
-              // _buildStatCard(
-              //   'أرقام صحيحة',
-              //   contactStats.validPhones.toString(),
-              //   Icons.phone,
-              //   AppConstants.successGreen,
-              // ),
-              // _buildStatCard(
-              //   'متوسط طول الرسالة',
-              //   '${messageStats.averageLength} حرف',
-              //   Icons.text_fields,
-              //   AppConstants.infoBlue,
-              // ),
-            ],
-          ),
-
-          // if (contactStats.total > 0 || messageStats.total > 0) ...[
-          //   const SizedBox(height: 20),
-          //   _buildHealthIndicator(appStats),
-          // ],
-        ],
-      ),
-    );
-  }
-
-  /// بناء قسم "من نحن"
-  Widget _buildAboutUsSection(BuildContext context, bool isMobile) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 20 : 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppConstants.appGreen, AppConstants.appDarkGreen],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              const _SectionTitle('الإعلانات'),
+              _SettingsGroup(
+                children: [
+                  _SettingsTile(
+                    icon: until != null
+                        ? Icons.check_circle_outline_rounded
+                        : Icons.visibility_off_rounded,
+                    title: until != null
+                        ? 'الإعلانات مخفية'
+                        : 'إخفاء الإعلانات',
+                    subtitle: until != null
+                        ? adFreeUntilLabel(context, until) +
+                              (ads.canWatchMore ? ' · اضغط لزيادة المدة' : '')
+                        : 'شاهد إعلاناً وأخفِ الإعلانات حتى 12 ساعة',
+                    onTap: () => showAdFreeSheet(context),
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.people,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                'من نحن',
-                style: TextStyle(
-                  fontSize: isMobile ? 18 : 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // محتوى من نحن
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppConstants.appGreen.withOpacity(0.05),
-                  AppConstants.appGreen.withOpacity(0.1),
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppConstants.appGreen.withOpacity(0.2),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppConstants.appGreen,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.rocket_launch,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'رؤيتنا',
-                      style: TextStyle(
-                        fontSize: isMobile ? 16 : 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppConstants.appDarkGreen,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "نساعد المستخدمين على التواصل بشكل أسرع من خلال ميزات متقدمة لإدارة المراسلات والأرقام.",
-                  style: TextStyle(
-                    fontSize: isMobile ? 14 : 16,
-                    color: Colors.grey[700],
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppConstants.appGreen,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.ad_units_sharp,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'مهمتنا',
-                      style: TextStyle(
-                        fontSize: isMobile ? 16 : 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppConstants.appDarkGreen,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'تطوير تطبيقات عملية وسهلة الاستخدام تلبي احتياجات المستخدمين اليومية وتوفر تجربة استخدام مميزة ومريحة.',
-                  style: TextStyle(
-                    fontSize: isMobile ? 14 : 16,
-                    color: Colors.grey[700],
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // المميزات الرئيسية
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '🌟 ما يميزنا:',
-                        style: TextStyle(
-                          fontSize: isMobile ? 15 : 17,
-                          fontWeight: FontWeight.bold,
-                          color: AppConstants.appDarkGreen,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFeatureItem('🚀', 'تقنيات حديثة ومتطورة'),
-                      _buildFeatureItem('🎨', 'تصميم عصري ومتجاوب'),
-                      _buildFeatureItem('🔒', 'أمان وخصوصية عالية'),
-                      _buildFeatureItem('⚡', 'أداء سريع وموثوق'),
-                      _buildFeatureItem('🆓', 'مجاني بالكامل'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-
-
-
-          // أزرار التواصل
-          Row(
-            children: [
-              // Expanded(
-              //   child: _buildContactButton(
-              //     'تقييم التطبيق',
-              //     Icons.star,
-              //     AppConstants.warningOrange,
-              //     _rateApp,
-              //   ),
-              // ),
-              Expanded(
-                child: _buildContactButton('سلامة الطفل', Icons.child_care,  AppConstants.infoBlue, (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ChildrenSafetyPolicyPage()));
-                }),
-              ),
-              // const SizedBox(width: 12),
-              // Expanded(
-              //   child: _buildContactButton(
-              //     'مشاركة التطبيق',
-              //     Icons.share,
-              //     AppConstants.infoBlue,
-              //     _shareApp,
-              //   ),
-              // ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// بناء قسم سياسة الخصوصية
-  Widget _buildPrivacyPolicySection(BuildContext context, bool isMobile) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 20 : 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppConstants.infoBlue, Colors.indigo],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.privacy_tip,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'سياسة الخصوصية',
-                      style: TextStyle(
-                        fontSize: isMobile ? 18 : 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'حماية بياناتك أولويتنا',
-                      style: TextStyle(
-                        fontSize: isMobile ? 12 : 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
-          ),
-          const SizedBox(height: 20),
-
-          // نقاط سياسة الخصوصية
-          _buildPrivacySection(
-            '🔒 حماية البيانات',
-            'جميع بياناتك محفوظة محلياً على جهازك ولا يتم رفعها إلى أي خوادم خارجية.',
-            AppConstants.successGreen,
-          ),
-
-          const SizedBox(height: 16),
-
-          _buildPrivacySection(
-            '📱 البيانات المحلية',
-            'التطبيق يحفظ جهات الاتصال والرسائل في ذاكرة الجهاز فقط ولا يشاركها مع أطراف ثالثة.',
-            AppConstants.infoBlue,
-          ),
-
-          const SizedBox(height: 16),
-
-          _buildPrivacySection(
-            '🚫 عدم التتبع',
-            'لا نجمع أي معلومات شخصية ولا نتتبع استخدامك للتطبيق.',
-            AppConstants.warningOrange,
-          ),
-
-          const SizedBox(height: 16),
-
-          _buildPrivacySection(
-            '🔄 التحديثات',
-            'قد نقوم بتحديث سياسة الخصوصية من وقت لآخر وسنخبرك بأي تغييرات مهمة.',
-            Colors.purple,
-          ),
-
-          const SizedBox(height: 20),
-
-          // تفاصيل إضافية
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppConstants.infoBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppConstants.infoBlue.withOpacity(0.3),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: AppConstants.infoBlue,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'معلومات مهمة',
-                      style: TextStyle(
-                        fontSize: isMobile ? 14 : 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppConstants.infoBlue,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '• يوفّر التطبيق طريقة لبدء المحادثات يدويًا دون إرسال الرسائل تلقائيًا.\n'
-                      '• لا يُجري التطبيق مكالمات تلقائيًا، بل يفتح شاشة الاتصال فقط.\n'
-                      '• عند إزالة تثبيت التطبيق، ستفقد جميع البيانات المخزنة.\n'
-                      '• جميع البيانات تُخزَّن محليًا على جهاز المستخدم، ولا يتم جمع أو مشاركة أي معلومات شخصية.\n'
-                      ,
-                  style: TextStyle(
-                    fontSize: isMobile ? 13 : 15,
-                    color: AppConstants.infoBlue.withOpacity(0.8),
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // زر عرض السياسة الكاملة
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => _showFullPrivacyPolicy(context),
-              icon: const Icon(Icons.article_outlined),
-              label: const Text('عرض السياسة الكاملة'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppConstants.infoBlue,
-                side: BorderSide(color: AppConstants.infoBlue),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
-    );
-  }
-
-  /// بناء مؤشر صحة البيانات
-  // Widget _buildHealthIndicator(AppUsageStatistics stats) {
-  //   final healthColor = AppUtils.getStatusColor(stats.healthStatus.toLowerCase());
-  //
-  //   return Container(
-  //     padding: const EdgeInsets.all(16),
-  //     decoration: BoxDecoration(
-  //       color: healthColor.withOpacity(0.1),
-  //       borderRadius: BorderRadius.circular(12),
-  //       border: Border.all(color: healthColor.withOpacity(0.3)),
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         Icon(
-  //           AppUtils.getStatusIcon(stats.healthStatus.toLowerCase()),
-  //           color: healthColor,
-  //           size: 24,
-  //         ),
-  //         const SizedBox(width: 12),
-  //         Expanded(
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text(
-  //                 'صحة البيانات: ${stats.dataHealth}%',
-  //                 style: TextStyle(
-  //                   fontWeight: FontWeight.bold,
-  //                   color: healthColor,
-  //                 ),
-  //               ),
-  //               LinearProgressIndicator(
-  //                 value: stats.dataHealth / 100,
-  //                 backgroundColor: healthColor.withOpacity(0.2),
-  //                 valueColor: AlwaysStoppedAnimation<Color>(healthColor),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  /// بناء بطاقة إحصائية
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          width: constraints.maxWidth, // ياخذ العرض المتاح له
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.3)),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: color, size: 32),
-                const SizedBox(height: 8),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: constraints.maxWidth * 0.08, // حجم ديناميكي
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: constraints.maxWidth * 0.08, // حجم ديناميكي
-                    color: Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-
-
-  /// بناء عنصر ميزة
-  Widget _buildFeatureItem(String emoji, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 16)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14, height: 1.4),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// بناء زر تواصل
-  Widget _buildContactButton(String text, IconData icon, Color color, VoidCallback onPressed) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 18),
-      label: Text(text),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-      ),
-    );
-  }
-
-  /// بناء قسم الخصوصية
-  Widget _buildPrivacySection(String title, String description, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: color,
-              fontSize: 15,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// عرض السياسة الكاملة
-  void _showFullPrivacyPolicy(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
+      const _SectionTitle('عن التطبيق'),
+      const _AboutCard(),
+      const SizedBox(height: AppSpace.m),
+      ListenableBuilder(
+        listenable: AdsService.instance,
+        builder: (context, _) => _SettingsGroup(
           children: [
-            Icon(Icons.privacy_tip, color: AppConstants.infoBlue),
-            SizedBox(width: 8),
-            Text('سياسة الخصوصية الكاملة'),
+            _SettingsTile(
+              icon: Icons.privacy_tip_rounded,
+              title: 'سياسة الخصوصية',
+              subtitle: 'كيف نحمي بياناتك',
+              onTap: () => showPrivacyPolicy(context),
+            ),
+            if (AdsService.instance.privacyOptionsRequired)
+              _SettingsTile(
+                icon: Icons.tune_rounded,
+                title: 'خيارات الخصوصية والإعلانات',
+                subtitle: 'غيّر اختيارك بخصوص الإعلانات',
+                onTap: AdsService.instance.showPrivacyOptions,
+              ),
+            _SettingsTile(
+              icon: Icons.child_care_rounded,
+              title: 'معايير سلامة الأطفال',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ChildSafetyPage(),
+                ),
+              ),
+            ),
+            _SettingsTile(
+              icon: Icons.mail_outline_rounded,
+              title: 'تواصل معنا',
+              subtitle: 'اقتراح أو مشكلة؟ راسلنا',
+              onTap: _contactUs,
+            ),
           ],
         ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildPolicySection(
-                '1. جمع البيانات',
-                'لا يجمع التطبيق أي بيانات شخصية من المستخدمين. جميع المعلومات التي تدخلها (مثل جهات الاتصال أو الرسائل) تُخزَّن محليًا على جهازك فقط.',
-              ),
-              _buildPolicySection(
-                '2. استخدام البيانات',
-                'تُستخدم البيانات المحفوظة فقط لتقديم خدمات التطبيق، مثل حفظ جهات الاتصال والرسائل. لا يتم تحليلها أو معالجتها لأي أغراض أخرى.',
-              ),
-              _buildPolicySection(
-                '3. مشاركة البيانات',
-                'لا تتم مشاركة أي بيانات مع أطراف خارجية. التطبيق يعمل بشكل مستقل ولا يرسل أي معلومات إلى خوادم خارجية.',
-              ),
-              _buildPolicySection(
-                '4. الأمان',
-                'يتم تأمين بياناتك من خلال آليات الحماية الموجودة في نظام التشغيل. نوصي باستخدام رقم سري أو بصمة لحماية جهازك.',
-              ),
-              _buildPolicySection(
-                '5. حقوقك',
-                'يمكنك حذف جميع بياناتك في أي وقت من خلال إعدادات التطبيق أو عند إلغاء تثبيته من الجهاز.',
-              ),
-            ],
-
-
+      ),
+      const _SectionTitle('البيانات'),
+      _SettingsGroup(
+        children: [
+          _SettingsTile(
+            icon: Icons.delete_forever_rounded,
+            title: 'مسح جميع البيانات',
+            subtitle: 'حذف كل جهات الاتصال والرسائل نهائياً',
+            danger: true,
+            onTap: hasData ? _clearAll : null,
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('موافق'),
+        ],
+      ),
+    ];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: AppSpace.xxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const PageHeader(
+            title: AppStrings.settings,
+            subtitle: 'تحكّم في مظهر التطبيق وبياناتك',
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < sections.length; i++)
+                  FadeSlideIn(
+                    playOnceKey: 'settings-section-$i',
+                    delay: FadeSlideIn.stagger(i, stepMs: 45),
+                    child: sections[i],
+                  ),
+              ],
+            ),
+          ),
+          const AdBanner(),
+        ],
+      ),
+    );
+  }
+}
+
+// ==================== الأقسام ====================
+
+class _BrandCard extends StatelessWidget {
+  const _BrandCard({required this.packageInfo});
+
+  final Future<PackageInfo> packageInfo;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+
+    return AppCard(
+      gradient: p.brand,
+      radius: AppRadius.xl,
+      padding: const EdgeInsets.all(AppSpace.xl),
+      child: Row(
+        children: [
+          Container(
+            width: 68,
+            height: 68,
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.l),
+            ),
+            child: Image.asset(Assets.logoPng, fit: BoxFit.contain),
+          ),
+          const SizedBox(width: AppSpace.l),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.appTitle,
+                  style: context.text.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  AppStrings.appSubtitle,
+                  style: context.text.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                FutureBuilder<PackageInfo>(
+                  future: packageInfo,
+                  builder: (context, snapshot) {
+                    final info = snapshot.data;
+                    if (info == null) return const SizedBox(height: 22);
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(AppRadius.s),
+                      ),
+                      child: Text(
+                        'الإصدار ${info.version}',
+                        style: context.text.labelMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  /// بناء قسم في السياسة
-  Widget _buildPolicySection(String title, String content) {
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(top: AppSpace.xl, bottom: AppSpace.m),
+      child: Text(
+        text,
+        style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+      ),
+    );
+  }
+}
+
+class _StatsGrid extends StatelessWidget {
+  const _StatsGrid({required this.controller});
+
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final contactStats = StatisticsHelper.getContactStatistics(
+      controller.contacts,
+    );
+    final messageStats = StatisticsHelper.getMessageStatistics(
+      controller.messages,
+    );
+    final totalUsage = controller.messages.fold<int>(
+      0,
+      (sum, m) => sum + m.usageCount,
+    );
+
+    final tiles = [
+      _StatTile(
+        icon: Icons.people_alt_rounded,
+        label: 'جهات الاتصال',
+        value: contactStats.total,
+        color: p.contacts.color,
+      ),
+      _StatTile(
+        icon: Icons.chat_bubble_rounded,
+        label: 'الرسائل المحفوظة',
+        value: messageStats.total,
+        color: p.messages.color,
+      ),
+      _StatTile(
+        icon: Icons.verified_rounded,
+        label: 'أرقام صحيحة',
+        value: contactStats.validPhones,
+        color: p.success,
+      ),
+      _StatTile(
+        icon: Icons.trending_up_rounded,
+        label: 'مرات الاستخدام',
+        value: totalUsage,
+        color: p.settings.color,
+      ),
+    ];
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: tiles[0]),
+            const SizedBox(width: AppSpace.m),
+            Expanded(child: tiles[1]),
+          ],
+        ),
+        const SizedBox(height: AppSpace.m),
+        Row(
+          children: [
+            Expanded(child: tiles[2]),
+            const SizedBox(width: AppSpace.m),
+            Expanded(child: tiles[3]),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final int value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpace.l),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppConstants.infoBlue,
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppRadius.s),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(height: AppSpace.m),
+          CountUp(
+            value: value,
+            style: context.text.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              height: 1,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            content,
-            style: const TextStyle(fontSize: 14, height: 1.4),
+            label,
+            style: context.text.bodySmall?.copyWith(color: p.inkSoft),
           ),
         ],
       ),
     );
   }
+}
 
-  /// بناء المنطقة الخطرة
-  Widget _buildDangerZoneSection(BuildContext context, bool isMobile) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 20 : 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-        border: Border.all(color: AppConstants.errorRed.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: AppConstants.errorRed.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+class _ThemeCard extends StatelessWidget {
+  const _ThemeCard({required this.controller});
+
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpace.m),
+      child: SizedBox(
+        width: double.infinity,
+        child: SegmentedButton<ThemeMode>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(
+              value: ThemeMode.system,
+              icon: Icon(Icons.brightness_auto_rounded),
+              label: Text('تلقائي'),
+            ),
+            ButtonSegment(
+              value: ThemeMode.light,
+              icon: Icon(Icons.light_mode_rounded),
+              label: Text('فاتح'),
+            ),
+            ButtonSegment(
+              value: ThemeMode.dark,
+              icon: Icon(Icons.dark_mode_rounded),
+              label: Text('داكن'),
+            ),
+          ],
+          selected: {controller.themeMode},
+          onSelectionChanged: (selection) =>
+              controller.setThemeMode(selection.first),
+        ),
       ),
+    );
+  }
+}
+
+class _AboutCard extends StatelessWidget {
+  const _AboutCard();
+
+  static const List<(IconData, String)> _features = [
+    (Icons.rocket_launch_rounded, 'تقنيات حديثة ومتطورة'),
+    (Icons.palette_rounded, 'تصميم عصري ومتجاوب'),
+    (Icons.shield_rounded, 'أمان وخصوصية عالية'),
+    (Icons.bolt_rounded, 'أداء سريع وموثوق'),
+    (Icons.card_giftcard_rounded, 'مجاني بالكامل'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+
+    Widget block(String title, String body) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: context.text.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: context.accent.color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          body,
+          style: context.text.bodyMedium?.copyWith(
+            color: p.inkSoft,
+            height: 1.8,
+          ),
+        ),
+      ],
+    );
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpace.l),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          block(
+            'رؤيتنا',
+            'نساعد المستخدمين على التواصل بشكل أسرع من خلال ميزات متقدمة لإدارة المراسلات والأرقام.',
+          ),
+          const SizedBox(height: AppSpace.l),
+          block(
+            'مهمتنا',
+            'تطوير تطبيقات عملية وسهلة الاستخدام تلبي احتياجات المستخدمين اليومية وتوفر تجربة استخدام مميزة ومريحة.',
+          ),
+          const SizedBox(height: AppSpace.l),
+          Divider(color: p.border),
+          const SizedBox(height: AppSpace.m),
+          Text(
+            'ما يميزنا',
+            style: context.text.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpace.m),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppConstants.errorRed.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+              for (final (icon, label) in _features)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: p.surfaceAlt,
+                    borderRadius: BorderRadius.circular(AppRadius.s),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 16, color: context.accent.color),
+                      const SizedBox(width: 6),
+                      Text(
+                        label,
+                        style: context.text.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Icon(
-                  Icons.warning,
-                  color: AppConstants.errorRed,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                'مسح وإعادة تعيين',
-                style: TextStyle(
-                  fontSize: isMobile ? 18 : 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppConstants.errorRed,
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          Text(
-            'الإجراءات التالية لا يمكن التراجع عنها. يرجى التأكد قبل المتابعة.',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          _buildDangerAction(
-            'مسح جميع البيانات',
-            'حذف جميع جهات الاتصال والرسائل نهائياً',
-            Icons.delete_forever,
-            _confirmClearAllData,
-            enabled: widget.contacts.isNotEmpty || widget.messages.isNotEmpty,
-          ),
-
-          const SizedBox(height: 12),
-
-          _buildDangerAction(
-            'إعادة تعيين التطبيق',
-            'استعادة التطبيق لحالته الأولى',
-            Icons.restore,
-            _confirmResetApp,
-          ),
         ],
-      ),
-    );
-  }
-
-  /// بناء إجراء خطر
-  Widget _buildDangerAction(
-      String title,
-      String subtitle,
-      IconData icon,
-      VoidCallback onTap, {
-        bool enabled = true,
-      }) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: AppConstants.errorRed.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: enabled ? AppConstants.errorRed : Colors.grey,
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: enabled ? AppConstants.errorRed : Colors.grey,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            color: enabled ? Colors.grey[600] : Colors.grey[400],
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: enabled ? AppConstants.errorRed : Colors.grey[300],
-        ),
-        onTap: enabled ? onTap : null,
-      ),
-    );
-  }
-
-  /// تأكيد مسح جميع البيانات
-  void _confirmClearAllData() async {
-    final confirmed = await AppUtils.showConfirmDialog(
-      context,
-      'تأكيد الحذف',
-      AppStrings.confirmClearData,
-      confirmText: 'حذف جميع البيانات',
-      isDestructive: true,
-      icon: Icons.delete_forever,
-    );
-
-    if (confirmed == true) {
-      widget.onClearAllData();
-    }
-  }
-
-  /// تأكيد إعادة تعيين التطبيق
-  void _confirmResetApp() async {
-    final confirmed = await AppUtils.showConfirmDialog(
-      context,
-      'إعادة تعيين التطبيق',
-      'هل تريد إعادة تعيين التطبيق لحالته الأولى؟ سيتم حذف جميع البيانات والإعدادات.',
-      confirmText: 'إعادة تعيين',
-      isDestructive: true,
-      icon: Icons.restore,
-    );
-
-    if (confirmed == true) {
-      // تنفيذ إعادة التعيين
-      widget.onClearAllData();
-
-      AppUtils.showCustomSnackBar(
-        context,
-        'تم إعادة تعيين التطبيق بنجاح',
-        isSuccess: true,
-      );
-    }
-  }
-
-  /// تقييم التطبيق
-  void _rateApp() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.star, color: AppConstants.warningOrange),
-            SizedBox(width: 8),
-            Text('تقييم التطبيق'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'هل أعجبك التطبيق؟ نحن نقدر تقييمك وملاحظاتك!',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                return IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    AppUtils.showCustomSnackBar(
-                      context,
-                      'شكراً لتقييمك! تم أخذ تقييمك بعين الاعتبار',
-                      isSuccess: true,
-                    );
-                  },
-                  icon: Icon(
-                    Icons.star,
-                    color: AppConstants.warningOrange,
-                    size: 32,
-                  ),
-                );
-              }),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('لاحقاً'),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-}
-
-
-
-
-
-class ChildrenSafetyPolicyPage extends StatelessWidget {
-  const ChildrenSafetyPolicyPage({super.key});
-
-  // دالة لفتح البريد الإلكتروني
-  void _launchEmail() async {
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: 'mohammedzewin01@gmail.com',
-      query: Uri.encodeFull('subject=استفسار بشأن سياسة الأطفال&body=مرحبًا فريق SandlyN،'),
-    );
-
-    if (await canLaunchUrl(emailLaunchUri)) {
-      await launchUrl(emailLaunchUri);
-    } else {
-      debugPrint('لا يمكن فتح تطبيق البريد.');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          backgroundColor: Colors.indigo.shade700,
-          title: const Text(
-            'معايير سلامة الأطفال',
-            style: TextStyle(color: Colors.white),
-          ),
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ListView(
-              children: [
-                const Text(
-                  'معايير سلامة الأطفال - SandlyN',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                    'نحن نأخذ سلامة جميع المستخدمين على محمل الجد، وخاصة الأطفال. '
-                        'تم تصميم تطبيق SandlyN لتسهيل إرسال الرسائل وحفظ الأرقام محليًا على الجهاز، '
-                        'دون إرسالها تلقائيًا أو جمع أي بيانات حساسة.'
-,
-                    style: TextStyle(fontSize: 16, height: 1.6),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'التزاماتنا تجاه سلامة الأطفال:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.indigo,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const BulletItem(text: 'لا يسمح التطبيق بأي محتوى ضار أو مسيء موجه للأطفال.'),
-                const BulletItem(text: 'التطبيق لا يحتوي على أي ميزات تتيح التفاعل بين المستخدمين أو نشر محتوى.'),
-                const BulletItem(text: 'لا يتم إرسال الرسائل أو إجراء المكالمات تلقائيًا، بل يتم فتح شاشة التطبيق المناسب فقط.'),
-                const BulletItem(text: 'لا يتم جمع أو تخزين أي معلومات شخصية حساسة على خوادم خارجية.'),
-                const BulletItem(text: 'نوفّر آلية للإبلاغ عن أي إساءة استخدام داخل التطبيق.'),
-                const BulletItem(text: 'نتعاون مع الجهات المختصة في حال الإبلاغ عن محتوى مخالف.'),
-
-                const SizedBox(height: 24),
-                const Text(
-                  'للتواصل معنا بشأن سلامة الأطفال أو الإبلاغ عن أي محتوى غير لائق:',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: _launchEmail,
-                  child: const Text(
-                    '📧 mohammedzewin01@gmail.com',
-                    style: TextStyle(
-                      color: Colors.indigo,
-                      fontSize: 16,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
 }
 
-class BulletItem extends StatelessWidget {
-  final String text;
-  const BulletItem({super.key, required this.text});
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.children});
+
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final p = context.palette;
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          const Text(
-            '• ',
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.indigo,
-              height: 1.6,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 16, height: 1.6),
-            ),
-          ),
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                indent: 68,
+                endIndent: AppSpace.l,
+                color: p.border,
+              ),
+            children[i],
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+    this.danger = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final enabled = onTap != null;
+    final tone = danger ? p.danger : context.accent.color;
+
+    return InkWell(
+      onTap: onTap,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.45,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.l,
+            vertical: 14,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Icon(icon, size: 20, color: tone),
+              ),
+              const SizedBox(width: AppSpace.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: context.text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: danger ? p.danger : p.ink,
+                      ),
+                    ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: context.text.bodySmall?.copyWith(
+                          color: p.inkSoft,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_left_rounded, color: p.inkFaint),
+            ],
+          ),
+        ),
       ),
     );
   }

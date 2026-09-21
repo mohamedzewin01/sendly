@@ -1,493 +1,310 @@
 import 'package:flutter/material.dart';
-import '../../../app/constants/app_constants.dart';
+
 import '../../../app/constants/app_strings.dart';
-import '../../../core/helpers/responsive_helper.dart';
-import '../../../core/helpers/statistics_helper.dart';
-import '../../../core/utils/app_utils.dart';
-import '../../../data/models/contact.dart';
+import '../../../app/theme/app_palette.dart';
 import '../../../data/models/message.dart';
+import '../../../providers/app_provider.dart';
+import '../../widgets/common/ad_banner.dart';
+import '../../widgets/common/app_feedback.dart';
+import '../../widgets/common/empty_state.dart';
+import '../../widgets/common/info_pill.dart';
+import '../../widgets/common/list_controls.dart';
+import '../../widgets/common/motion.dart';
+import '../../widgets/common/page_header.dart';
+import '../../widgets/message/category_style.dart';
 import '../../widgets/message/message_card.dart';
-import '../../widgets/message/message_dialog.dart';
-import '../../widgets/common/empty_state_widget.dart';
-import '../../widgets/stats/stats_card.dart';
+import '../../widgets/message/message_details_sheet.dart';
+import '../../widgets/message/message_form_sheet.dart';
+import '../../widgets/send/send_sheet.dart';
 
-/// صفحة إدارة الرسائل المحفوظة
+enum _MessageSort {
+  newest('الأحدث'),
+  title('العنوان (أ - ي)'),
+  usage('الأكثر استخداماً'),
+  longest('الأطول');
+
+  const _MessageSort(this.label);
+  final String label;
+}
+
+/// صفحة الرسائل المحفوظة (القوالب)
 class MessagesPage extends StatefulWidget {
-  final List<Message> messages;
-  final List<Contact> contacts;
-  final Function(Message) onAddMessage;
-  final Function(Message) onUpdateMessage;
-  final Function(String) onDeleteMessage;
-  final Function(String, String) onSendMessage;
-
-  const MessagesPage({
-    super.key,
-    required this.messages,
-    required this.contacts,
-    required this.onAddMessage,
-    required this.onUpdateMessage,
-    required this.onDeleteMessage,
-    required this.onSendMessage,
-  });
+  const MessagesPage({super.key});
 
   @override
   State<MessagesPage> createState() => _MessagesPageState();
 }
 
 class _MessagesPageState extends State<MessagesPage> {
-  final TextEditingController _searchController = TextEditingController();
-  List<Message> _filteredMessages = [];
-  String _sortBy = 'date'; // date, title, usage, length
-  bool _sortAscending = false;
-  MessageCategory? _selectedCategory;
+  final TextEditingController _search = TextEditingController();
+  String _query = '';
+  MessageCategory? _category;
+  _MessageSort _sort = _MessageSort.newest;
 
   @override
-  void initState() {
-    super.initState();
-    _filteredMessages = List.from(widget.messages);
-    _searchController.addListener(_filterMessages);
-    _sortMessages();
+  void dispose() {
+    _search.dispose();
+    super.dispose();
   }
 
-  @override
-  void didUpdateWidget(MessagesPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.messages != widget.messages) {
-      setState(() {
-        _filteredMessages = List.from(widget.messages);
-        _sortMessages();
-      });
+  List<Message> _visible(List<Message> all) {
+    final filtered = all
+        .where(
+          (m) =>
+              (_category == null || m.category == _category) &&
+              m.matches(_query),
+        )
+        .toList();
+    switch (_sort) {
+      case _MessageSort.newest:
+        return Message.sortByDate(filtered, ascending: false);
+      case _MessageSort.title:
+        return Message.sortAlphabetically(filtered);
+      case _MessageSort.usage:
+        return Message.sortByUsage(filtered);
+      case _MessageSort.longest:
+        return Message.sortByLength(filtered, ascending: false);
     }
   }
 
-  /// تصفية الرسائل
-  void _filterMessages() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredMessages = widget.messages.where((message) {
-        final matchesQuery = message.matches(query);
-        final matchesCategory = _selectedCategory == null ||
-            message.category == _selectedCategory;
-        return matchesQuery && matchesCategory;
-      }).toList();
-      _sortMessages();
-    });
-  }
-
-  /// ترتيب الرسائل
-  void _sortMessages() {
-    switch (_sortBy) {
-      case 'date':
-        _filteredMessages = Message.sortByDate(_filteredMessages, ascending: _sortAscending);
-        break;
-      case 'title':
-        _filteredMessages = Message.sortAlphabetically(_filteredMessages);
-        if (!_sortAscending) {
-          _filteredMessages = _filteredMessages.reversed.toList();
-        }
-        break;
-      case 'usage':
-        _filteredMessages = Message.sortByUsage(_filteredMessages, ascending: _sortAscending);
-        break;
-      case 'length':
-        _filteredMessages = Message.sortByLength(_filteredMessages, ascending: _sortAscending);
-        break;
+  Future<void> _delete(Message message) async {
+    final controller = AppScope.read(context);
+    try {
+      final removed = await controller.deleteMessage(message.id);
+      if (!mounted || removed == null) return;
+      AppSnack.success(
+        context,
+        'تم حذف «${message.title}»',
+        actionLabel: 'تراجع',
+        onAction: () => controller.addMessage(removed),
+      );
+    } catch (e) {
+      if (mounted) AppSnack.error(context, errorText(e));
     }
   }
 
-  /// تغيير طريقة الترتيب
-  void _changeSorting(String sortBy) {
-    setState(() {
-      if (_sortBy == sortBy) {
-        _sortAscending = !_sortAscending;
-      } else {
-        _sortBy = sortBy;
-        _sortAscending = sortBy == 'date' ? false : true;
-      }
-      _sortMessages();
-    });
-  }
-
-  /// تغيير تصنيف التصفية
-  void _changeCategory(MessageCategory? category) {
-    setState(() {
-      _selectedCategory = category;
-      _filterMessages();
-    });
+  void _handleAction(Message message, MessageAction action) {
+    switch (action) {
+      case MessageAction.edit:
+        showMessageForm(context, message: message);
+      case MessageAction.delete:
+        _delete(message);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final padding = ResponsiveHelper.getResponsivePadding(context);
-    final isMobile = ResponsiveHelper.isMobile(context);
+    final all = AppScope.of(context).messages;
+    final present = MessageCategory.values
+        .where((c) => all.any((m) => m.category == c))
+        .toList();
+    // إذا اختفى التصنيف المحدد (بعد حذف آخر رسالة فيه) نعرض الكل
+    final activeCategory = present.contains(_category) ? _category : null;
+    final messages = _visible(all);
+    final adSlots = ListAdSlots(messages.length);
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFF8F9FA), Color(0xFFE8F5E8)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: [
+        SliverToBoxAdapter(
+          child: PageHeader(
+            title: AppStrings.messages,
+            subtitle: all.isEmpty
+                ? 'قوالب جاهزة تختصر عليك الكتابة'
+                : '${all.length} رسالة محفوظة',
+            trailing: HeaderIconButton(
+              icon: Icons.add_comment_rounded,
+              tooltip: AppStrings.addMessage,
+              onPressed: () => showMessageForm(context),
+            ),
+          ),
         ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(padding),
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
+        if (all.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.xl,
+                0,
+                AppSpace.xl,
+                AppSpace.m,
+              ),
+              child: Row(
                 children: [
-                  _buildStatsSection(isMobile),
-                  const SizedBox(height: 20),
-                  _buildSearchAndFilters(isMobile),
-                  const SizedBox(height: 20),
-                  _buildCategoryFilters(),
-                  const SizedBox(height: 20),
-
-                  // Expanded(
-                  //   child: _buildMessagesList(isMobile),
-                  // ),
+                  Expanded(
+                    child: SearchField(
+                      controller: _search,
+                      hint: 'ابحث في الرسائل',
+                      onChanged: (v) => setState(() => _query = v.trim()),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.s),
+                  SortMenuButton<_MessageSort>(
+                    value: _sort,
+                    options: _MessageSort.values,
+                    labelOf: (option) => option.label,
+                    onChanged: (v) => setState(() => _sort = v),
+                  ),
                 ],
               ),
             ),
-            _buildMessagesList(isMobile)
-          ],
-
-        ),
-      ),
-    );
-  }
-
-  /// بناء قسم الإحصائيات
-  Widget _buildStatsSection(bool isMobile) {
-    final stats = StatisticsHelper.getMessageStatistics(widget.messages);
-
-    return StatsCard(
-      title: AppStrings.savedMessages,
-      count: stats.total.toString(),
-      icon: Icons.message,
-      color: AppConstants.warningOrange,
-      onTap: _showAddMessageDialog,
-      subtitle: 'متوسط الطول: ${stats.averageLength} حرف',
-    );
-  }
-
-  /// بناء قسم البحث والتصفية
-  Widget _buildSearchAndFilters(bool isMobile) {
-    return Column(
-      children: [
-        // شريط البحث
-        TextField(
-          controller: _searchController,
-          decoration: InputDecoration(
-            hintText: 'البحث في الرسائل...',
-            prefixIcon: const Icon(Icons.search, color: AppConstants.warningOrange),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-              },
-            )
-                : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
-              borderSide: BorderSide.none,
+          ),
+          if (present.length > 1)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 44,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
+                  children: [
+                    _FilterChip(
+                      label: 'الكل',
+                      selected: activeCategory == null,
+                      onTap: () => setState(() => _category = null),
+                    ),
+                    for (final category in present) ...[
+                      const SizedBox(width: 8),
+                      _FilterChip(
+                        label: category.displayName,
+                        icon: category.icon,
+                        color: category.tone(context),
+                        selected: activeCategory == category,
+                        onTap: () => setState(() => _category = category),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
-            filled: true,
-            fillColor: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpace.m)),
+        ],
+        if (all.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: EmptyState(
+                icon: Icons.chat_bubble_outline_rounded,
+                title: AppStrings.noMessages,
+                subtitle:
+                    'احفظ رسائلك المتكررة مرة واحدة، ثم أرسلها لأي شخص بضغطة.',
+                actionLabel: AppStrings.addMessage,
+                onAction: () => showMessageForm(context),
+              ),
+            ),
+          )
+        else if (messages.isEmpty)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: EmptyState(
+                icon: Icons.search_off_rounded,
+                title: 'لا توجد نتائج',
+                subtitle: 'جرّب كلمات بحث أو تصنيفاً مختلفاً.',
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.xl,
+              0,
+              AppSpace.xl,
+              AppSpace.xxl,
+            ),
+            sliver: SliverList.builder(
+              itemCount: adSlots.totalCount,
+              itemBuilder: (context, position) {
+                // بانر صغير بعد كل 3 رسائل
+                if (adSlots.isAd(position)) return const AdBanner.inList();
 
-        // أزرار الترتيب
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildSortButton('date', 'التاريخ', Icons.date_range),
-              const SizedBox(width: 8),
-              _buildSortButton('title', 'الاسم', Icons.sort_by_alpha),
-              const SizedBox(width: 8),
-              _buildSortButton('usage', 'الاستخدام', Icons.trending_up),
-              const SizedBox(width: 8),
-              _buildSortButton('length', 'الطول', Icons.text_fields),
-            ],
+                final index = adSlots.itemIndex(position);
+                final message = messages[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpace.m),
+                  child: FadeSlideIn(
+                    key: ValueKey(message.id),
+                    playOnceKey: 'message-${message.id}',
+                    delay: FadeSlideIn.stagger(index),
+                    child: Dismissible(
+                      key: ValueKey('dismiss-${message.id}'),
+                      direction: DismissDirection.startToEnd,
+                      background: const DeleteSwipeBackground(),
+                      onDismissed: (_) => _delete(message),
+                      child: MessageCard(
+                        message: message,
+                        onTap: () => showMessageDetails(context, message),
+                        onSend: () => showSendSheet(
+                          context,
+                          initialMessage: message.content,
+                          initialTemplateId: message.id,
+                        ),
+                        onCopy: () => copyMessage(context, message),
+                        onAction: (action) => _handleAction(message, action),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
+        // إعلان واحد في آخر القائمة، بعيداً عن أزرار الإرسال
+        if (messages.isNotEmpty) const SliverToBoxAdapter(child: AdBanner()),
       ],
     );
   }
+}
 
-  /// بناء زر الترتيب
-  Widget _buildSortButton(String sortKey, String label, IconData icon) {
-    final isActive = _sortBy == sortKey;
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+    this.color,
+  });
 
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: isActive ? Colors.white : AppConstants.warningOrange,
-          ),
-          const SizedBox(width: 4),
-          Text(label),
-          if (isActive) ...[
-            const SizedBox(width: 4),
-            Icon(
-              _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-              size: 14,
-              color: Colors.white,
-            ),
-          ],
-        ],
-      ),
-      selected: isActive,
-      onSelected: (_) => _changeSorting(sortKey),
-      selectedColor: AppConstants.warningOrange,
-      checkmarkColor: Colors.white,
-      labelStyle: TextStyle(
-        color: isActive ? Colors.white : AppConstants.warningOrange,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
-  /// بناء مرشحات التصنيف
-  Widget _buildCategoryFilters() {
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          _buildCategoryChip(null, 'الكل'),
-          const SizedBox(width: 8),
-          ...MessageCategory.values.map((category) =>
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: _buildCategoryChip(category, category.displayName),
-              ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// بناء رقاقة التصنيف
-  Widget _buildCategoryChip(MessageCategory? category, String label) {
-    final isSelected = _selectedCategory == category;
-
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => _changeCategory(category),
-      selectedColor: AppConstants.appGreen.withOpacity(0.2),
-      checkmarkColor: AppConstants.appGreen,
-      labelStyle: TextStyle(
-        color: isSelected ? AppConstants.appGreen : Colors.grey[700],
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      side: BorderSide(
-        color: isSelected ? AppConstants.appGreen : Colors.grey[300]!,
-      ),
-    );
-  }
-
-  /// بناء قائمة الرسائل
-  Widget _buildMessagesList(bool isMobile) {
-    if (_filteredMessages.isEmpty) {
-      if (widget.messages.isEmpty) {
-        return SliverToBoxAdapter(
-          child: EmptyStateWidget(
-            icon: Icons.message_outlined,
-            title: AppStrings.noMessages,
-            subtitle: AppStrings.startByAddingMessages,
-            actionText: AppStrings.addMessage,
-            onActionPressed: _showAddMessageDialog,
-          ),
-        );
-      } else {
-        return SliverToBoxAdapter(
-          child: const EmptyStateWidget(
-            icon: Icons.search_off,
-            title: 'لا توجد نتائج',
-            subtitle: 'جرب تغيير كلمات البحث أو التصنيف',
-          ),
-        );
-      }
-    }
-
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) => _buildMessageItem(_filteredMessages[index]),
-        childCount: _filteredMessages.length,
-      ),
-    );
-    //   itemCount: _filteredMessages.length,
-    //   itemBuilder: (context, index) {
-    //     return _buildMessageItem(_filteredMessages[index]);
-    //   },
-    // );
-  }
-
-  /// بناء عنصر رسالة
-  Widget _buildMessageItem(Message message) {
-    return MessageCard(
-      message: message,
-      onEdit: () => _showEditMessageDialog(message),
-      onDelete: () => _deleteMessage(message),
-      onSend: () => _sendMessageToContact(message),
-      onUse: () => _useMessage(message),
-    );
-  }
-
-  /// عرض حوار إضافة رسالة
-  void _showAddMessageDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => MessageDialog(
-        title: AppStrings.addMessage,
-        onSave: (title, content, category) {
-          final message = Message.create(
-            title: title,
-            content: content,
-            category: category,
-          );
-          widget.onAddMessage(message);
-          setState(() {
-            _filteredMessages.add(message);
-            _sortMessages();
-          });
-
-        },
-      ),
-    );
-  }
-
-  /// عرض حوار تعديل رسالة
-  void _showEditMessageDialog(Message message) {
-    showDialog(
-      context: context,
-      builder: (context) => MessageDialog(
-        title: AppStrings.editMessage,
-        initialTitle: message.title,
-        initialContent: message.content,
-        initialCategory: message.category,
-        onSave: (title, content, category) {
-          final updatedMessage = message.copyWith(
-            title: title,
-            content: content,
-            category: category,
-          );
-          widget.onUpdateMessage(updatedMessage);
-          setState(() {
-            final index = _filteredMessages.indexWhere((m) => m.id == updatedMessage.id);
-            if (index != -1) {
-              _filteredMessages[index] = updatedMessage;
-              _sortMessages();
-            }
-          });
-
-        },
-      ),
-    );
-  }
-
-  /// حذف رسالة
-  void _deleteMessage(Message message) async {
-    final confirmed = await AppUtils.showConfirmDialog(
-      context,
-      AppStrings.confirmDeleteMessage,
-      'هل تريد حذف "${message.title}"؟',
-      confirmText: AppStrings.delete,
-      isDestructive: true,
-      icon: Icons.delete_forever,
-    );
-
-    if (confirmed == true) {
-      // استدعاء الدالة الخارجية للحذف من المصدر
-      widget.onDeleteMessage(message.id);
-
-      // حذف فوري من القائمة المعروضة
-      setState(() {
-        _filteredMessages.removeWhere((m) => m.id == message.id);
-      });
-    }
-  }
-
-
-  /// إرسال رسالة لجهة اتصال
-  void _sendMessageToContact(Message message) {
-    if (widget.contacts.isEmpty) {
-      AppUtils.showCustomSnackBar(
-        context,
-        'لا توجد جهات اتصال لإرسال الرسالة إليها',
-        isError: true,
-      );
-      return;
-    }
-
-    _showContactSelectionDialog(message);
-  }
-
-  /// عرض حوار اختيار جهة الاتصال
-  void _showContactSelectionDialog(Message message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('اختر جهة الاتصال'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: ListView.builder(
-            itemCount: widget.contacts.length,
-            itemBuilder: (context, index) {
-              final contact = widget.contacts[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppConstants.appGreen,
-                  child: Text(
-                    contact.initials,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                title: Text(contact.name),
-                subtitle: Text(contact.displayPhone),
-                onTap: () {
-                  Navigator.pop(context);
-                  widget.onSendMessage(contact.phone, message.content);
-
-                  // زيادة عداد الاستخدام
-                  final updatedMessage = message.incrementUsage();
-                  widget.onUpdateMessage(updatedMessage);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// استخدام رسالة (نسخ إلى الحافظة)
-  void _useMessage(Message message) {
-    AppUtils.copyToClipboard(context, message.content);
-
-    // زيادة عداد الاستخدام
-    final updatedMessage = message.incrementUsage();
-    widget.onUpdateMessage(updatedMessage);
-  }
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData? icon;
+  final Color? color;
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final tone = color ?? context.accent.color;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? tone.withValues(alpha: 0.14) : p.surface,
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          border: Border.all(
+            color: selected ? tone : p.border,
+            width: selected ? 1.4 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: selected ? tone : p.inkSoft),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: context.text.labelLarge?.copyWith(
+                color: selected ? tone : p.inkSoft,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

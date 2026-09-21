@@ -95,9 +95,9 @@ class StatisticsHelper {
 
   /// حساب إحصائيات الاستخدام العام
   static AppUsageStatistics getAppUsageStatistics(
-      List<Contact> contacts,
-      List<Message> messages,
-      ) {
+    List<Contact> contacts,
+    List<Message> messages,
+  ) {
     final contactStats = getContactStatistics(contacts);
     final messageStats = getMessageStatistics(messages);
 
@@ -121,9 +121,9 @@ class StatisticsHelper {
 
   /// حساب صحة البيانات (نسبة مئوية)
   static int _calculateDataHealth(
-      ContactStatistics contactStats,
-      MessageStatistics messageStats,
-      ) {
+    ContactStatistics contactStats,
+    MessageStatistics messageStats,
+  ) {
     int score = 0;
     int maxScore = 0;
 
@@ -147,7 +147,8 @@ class StatisticsHelper {
       if (messageStats.total >= 3) score += 20;
 
       // نقاط لطول الرسائل المناسب
-      if (messageStats.averageLength >= 50 && messageStats.averageLength <= 1000) {
+      if (messageStats.averageLength >= 50 &&
+          messageStats.averageLength <= 1000) {
         score += 20;
       }
 
@@ -160,16 +161,18 @@ class StatisticsHelper {
 
   /// الحصول على توصيات لتحسين البيانات
   static List<String> getDataRecommendations(
-      List<Contact> contacts,
-      List<Message> messages,
-      ) {
+    List<Contact> contacts,
+    List<Message> messages,
+  ) {
     final recommendations = <String>[];
     final contactStats = getContactStatistics(contacts);
     final messageStats = getMessageStatistics(messages);
 
     // توصيات للجهات
     if (contactStats.total == 0) {
-      recommendations.add('ابدأ بإضافة جهات اتصال للاستفادة من الإرسال الجماعي');
+      recommendations.add(
+        'ابدأ بإضافة جهات اتصال للاستفادة من الإرسال الجماعي',
+      );
     } else if (contactStats.total < 5) {
       recommendations.add('أضف المزيد من جهات الاتصال لتحقيق أقصى استفادة');
     }
@@ -268,8 +271,7 @@ class MessageStatistics {
     );
   }
 
-  double get arabicPercentage =>
-      total > 0 ? (arabicMessages / total * 100) : 0;
+  double get arabicPercentage => total > 0 ? (arabicMessages / total * 100) : 0;
 
   String get preferredLanguage =>
       arabicMessages > englishMessages ? 'العربية' : 'الإنجليزية';

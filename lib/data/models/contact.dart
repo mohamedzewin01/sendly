@@ -191,11 +191,6 @@ class Contact {
     return null;
   }
 
-  /// إنشاء رابط
-  String createappUrl([String? message]) {
-    return PhoneNumberFormatter.toappUrl(phone, message);
-  }
-
   /// التحقق من صحة البيانات
   List<String> validate() {
     final errors = <String>[];
@@ -244,7 +239,10 @@ class Contact {
   }
 
   /// ترتيب القائمة حسب تاريخ الإنشاء
-  static List<Contact> sortByDate(List<Contact> contacts, {bool ascending = true}) {
+  static List<Contact> sortByDate(
+    List<Contact> contacts, {
+    bool ascending = true,
+  }) {
     final sorted = List<Contact>.from(contacts);
     if (ascending) {
       sorted.sort((a, b) => a.createdAt.compareTo(b.createdAt));

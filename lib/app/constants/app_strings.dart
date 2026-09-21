@@ -1,8 +1,9 @@
 /// النصوص الثابتة للتطبيق
 class AppStrings {
-  static const String appTitle = 'SandlyN';
-  static const String appSubtitle = 'مراسلة مباشرة';
-  static const String appDescription = 'تطبيق يساعدك في إدارة جهات الاتصال والرسائل بطريقة منظمة وفعالة';
+  static const String appTitle = 'رسالة';
+  static const String appSubtitle = 'إرسال سريع';
+  static const String appDescription =
+      'تطبيق يساعدك في إدارة جهات الاتصال والرسائل بطريقة منظمة وفعالة';
 
   // التبويبات الرئيسية
   static const String contactsTab = 'الجهات';
@@ -13,9 +14,11 @@ class AppStrings {
 
   // الإرسال السريع - تم التعديل
   static const String quickSend = 'إرسال سريع';
-  static const String quickSendDescription = 'أرسل رسالة لأي رقم عبر تطبيقات المراسلة';
+  static const String quickSendDescription =
+      'أرسل رسالة لأي رقم عبر تطبيقات المراسلة';
   static const String sendMessage = 'إرسال الرسالة';
-  static const String sendViaMessaging = 'إرسال عبر تطبيق المراسلة'; // تم التغيير
+  static const String sendViaMessaging =
+      'إرسال عبر تطبيق المراسلة'; // تم التغيير
   static const String openMessagingApp = 'فتح تطبيق المراسلة'; // جديد
   static const String messageText = 'نص الرسالة';
   static const String phoneNumber = 'رقم الهاتف';
@@ -24,26 +27,28 @@ class AppStrings {
 
   // الإرسال الجماعي - تم التعديل
   static const String bulkSend = 'إرسال جماعي';
-  static const String bulkSendDescription = 'أرسل رسالة واحدة لعدة جهات اتصال عبر تطبيقات المراسلة';
-  static const String bulkMessageHint = 'اكتب الرسالة التي تريد إرسالها لجميع جهات الاتصال المحددة';
+  static const String bulkSendDescription =
+      'أرسل رسالة واحدة لعدة جهات اتصال عبر تطبيقات المراسلة';
+  static const String bulkMessageHint =
+      'اكتب الرسالة التي تريد إرسالها لجميع جهات الاتصال المحددة';
 
   // رسائل النجاح - تم التعديل
-  static const String messagingAppOpened = 'تم فتح تطبيق المراسلة بنجاح'; // تم التغيير
+  static const String messagingAppOpened =
+      'تم فتح تطبيق المراسلة بنجاح'; // تم التغيير
   static const String callAppOpened = 'تم فتح تطبيق الاتصال بنجاح'; // جديد
 
   // رسائل الخطأ - تم التعديل
-  static const String cantOpenMessagingApp = 'لا يمكن فتح تطبيق المراسلة'; // تم التغيير
+  static const String cantOpenMessagingApp =
+      'لا يمكن فتح تطبيق المراسلة'; // تم التغيير
   static const String cantOpenCallApp = 'لا يمكن فتح تطبيق الاتصال'; // جديد
-  static const String noMessagingAppInstalled = 'لا يوجد تطبيق مراسلة مثبت على الجهاز'; // جديد
+  static const String noMessagingAppInstalled =
+      'لا يوجد تطبيق مراسلة مثبت على الجهاز'; // جديد
 
   // إضافة نصوص جديدة للتوضيح
   static const String messagingAppNote = 'سيتم فتح تطبيق المراسلة المفضل لديك';
   static const String callAppNote = 'سيتم فتح تطبيق الاتصال الافتراضي';
-  static const String externalAppDisclaimer = 'يتم فتح التطبيقات الخارجية للتحكم اليدوي';
-
-
-
-
+  static const String externalAppDisclaimer =
+      'يتم فتح التطبيقات الخارجية للتحكم اليدوي';
 
   // جهات الاتصال
   static const String contacts = 'جهات الاتصال';
@@ -76,11 +81,6 @@ class AppStrings {
 
   // الإرسال السريع
 
-
-
-
-
-
   // الإرسال الجماعي
 
   static const String selectContacts = 'اختيار جهات الاتصال';
@@ -88,7 +88,6 @@ class AppStrings {
   static const String unselectAll = 'إلغاء الكل';
   static const String sendToSelected = 'إرسال للمحددين';
   static const String contactsSelected = 'جهة اتصال محددة';
-
 
   // الإعدادات
   static const String settings = 'الإعدادات';
@@ -134,7 +133,8 @@ class AppStrings {
   static const String confirmDelete = 'هل تريد حذف هذا العنصر؟';
   static const String confirmDeleteContact = 'هل تريد حذف جهة الاتصال؟';
   static const String confirmDeleteMessage = 'هل تريد حذف الرسالة؟';
-  static const String confirmClearData = 'هل تريد مسح جميع البيانات؟ لن يمكن التراجع عن هذا الإجراء.';
+  static const String confirmClearData =
+      'هل تريد مسح جميع البيانات؟ لن يمكن التراجع عن هذا الإجراء.';
   static const String actionCannotBeUndone = 'لا يمكن التراجع عن هذا الإجراء';
 
   // رسائل النجاح
@@ -162,8 +162,10 @@ class AppStrings {
   static const String noDataAvailable = 'لا توجد بيانات متاحة';
   static const String addFirstContact = 'أضف أول جهة اتصال';
   static const String addFirstMessage = 'أضف أول رسالة';
-  static const String startByAddingContacts = 'ابدأ بإضافة جهات اتصال من تبويب "الجهات"';
-  static const String startByAddingMessages = 'ابدأ بإضافة رسائل من تبويب "الرسائل"';
+  static const String startByAddingContacts =
+      'ابدأ بإضافة جهات اتصال من تبويب "الجهات"';
+  static const String startByAddingMessages =
+      'ابدأ بإضافة رسائل من تبويب "الرسائل"';
 
   // ميزات قيد التطوير
   static const String featureUnderDevelopment = 'هذه الميزة قيد التطوير';

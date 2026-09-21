@@ -18,7 +18,7 @@ enum MessageCategory {
 
   static MessageCategory fromString(String value) {
     return MessageCategory.values.firstWhere(
-          (category) => category.name == value,
+      (category) => category.name == value,
       orElse: () => MessageCategory.general,
     );
   }
@@ -205,7 +205,11 @@ class Message {
 
   /// عدد الكلمات
   int get wordCount {
-    return content.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length;
+    return content
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .length;
   }
 
   /// عدد الأسطر
@@ -219,8 +223,24 @@ class Message {
     final lowerTitle = title.toLowerCase();
 
     // كلمات مفتاحية للتصنيف
-    final businessKeywords = ['شركة', 'عمل', 'مشروع', 'اجتماع', 'موظف', 'راتب', 'وظيفة'];
-    final marketingKeywords = ['عرض', 'خصم', 'تسويق', 'منتج', 'بيع', 'شراء', 'إعلان'];
+    final businessKeywords = [
+      'شركة',
+      'عمل',
+      'مشروع',
+      'اجتماع',
+      'موظف',
+      'راتب',
+      'وظيفة',
+    ];
+    final marketingKeywords = [
+      'عرض',
+      'خصم',
+      'تسويق',
+      'منتج',
+      'بيع',
+      'شراء',
+      'إعلان',
+    ];
     final supportKeywords = ['مساعدة', 'دعم', 'مشكلة', 'حل', 'استفسار', 'خدمة'];
     final greetingKeywords = ['مرحبا', 'أهلا', 'صباح', 'مساء', 'تحية', 'سلام'];
     final reminderKeywords = ['تذكير', 'موعد', 'اجتماع', 'مهمة', 'ميعاد'];
@@ -282,7 +302,10 @@ class Message {
   }
 
   /// ترتيب القائمة حسب تاريخ الإنشاء
-  static List<Message> sortByDate(List<Message> messages, {bool ascending = true}) {
+  static List<Message> sortByDate(
+    List<Message> messages, {
+    bool ascending = true,
+  }) {
     final sorted = List<Message>.from(messages);
     if (ascending) {
       sorted.sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -293,7 +316,10 @@ class Message {
   }
 
   /// ترتيب حسب عدد مرات الاستخدام
-  static List<Message> sortByUsage(List<Message> messages, {bool ascending = false}) {
+  static List<Message> sortByUsage(
+    List<Message> messages, {
+    bool ascending = false,
+  }) {
     final sorted = List<Message>.from(messages);
     if (ascending) {
       sorted.sort((a, b) => a.usageCount.compareTo(b.usageCount));
@@ -304,7 +330,10 @@ class Message {
   }
 
   /// ترتيب حسب طول المحتوى
-  static List<Message> sortByLength(List<Message> messages, {bool ascending = true}) {
+  static List<Message> sortByLength(
+    List<Message> messages, {
+    bool ascending = true,
+  }) {
     final sorted = List<Message>.from(messages);
     if (ascending) {
       sorted.sort((a, b) => a.length.compareTo(b.length));
@@ -315,7 +344,10 @@ class Message {
   }
 
   /// تصفية حسب التصنيف
-  static List<Message> filterByCategory(List<Message> messages, MessageCategory category) {
+  static List<Message> filterByCategory(
+    List<Message> messages,
+    MessageCategory category,
+  ) {
     return messages.where((message) => message.category == category).toList();
   }
 
@@ -333,7 +365,9 @@ class Message {
   /// الحصول على الرسائل الحديثة
   static List<Message> getRecent(List<Message> messages, {int days = 7}) {
     final cutoffDate = DateTime.now().subtract(Duration(days: days));
-    return messages.where((message) => message.createdAt.isAfter(cutoffDate)).toList();
+    return messages
+        .where((message) => message.createdAt.isAfter(cutoffDate))
+        .toList();
   }
 
   /// الحصول على جميع التاجات المستخدمة

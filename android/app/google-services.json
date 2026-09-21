@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "549196398010",
+    "project_id": "sandlyn",
+    "storage_bucket": "sandlyn.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:549196398010:android:aa7e21b5ce730212377183",
+        "android_client_info": {
+          "package_name": "com.mnrra.sandlyn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7BnlxKdKC0aWwh5FkWemAD47zwk0dvOw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

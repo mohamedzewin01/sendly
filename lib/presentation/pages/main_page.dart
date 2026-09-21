@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:sendly/core/services/messaging_service.dart';
-import 'package:sendly/core/utils/remote_config.dart';
-import '../../app/constants/app_constants.dart';
-import '../../app/constants/app_strings.dart';
-import '../../core/helpers/responsive_helper.dart';
-import '../../core/services/storage_service.dart';
-import '../../core/utils/app_utils.dart';
-import '../../data/models/contact.dart';
-import '../../data/models/message.dart';
-import '../widgets/common/custom_app_bar.dart';
+import 'package:flutter/services.dart';
+
+import '../../app/theme/app_palette.dart';
+import '../../app/theme/app_theme.dart';
+import '../../assets_manager.dart';
+import '../../core/services/ads_service.dart';
+import '../../core/services/incoming_share_service.dart';
+import '../../core/utils/remote_config.dart';
+import '../../providers/app_provider.dart';
+import '../widgets/common/ad_banner.dart';
+import '../widgets/common/app_feedback.dart';
+import '../widgets/common/update_dialog.dart';
+import '../widgets/send/number_chooser_sheet.dart';
+import 'settings/ad_free_sheet.dart';
 import 'contacts/contacts_page.dart';
 import 'messages/messages_page.dart';
 import 'quick_send/quick_send_page.dart';
 import 'settings/settings_page.dart';
 
-/// الصفحة الرئيسية للتطبيق
+/// الصفحة الرئيسية: تبويبات التطبيق مع شريط تنقل سفلي قياسي
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -23,587 +27,298 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  static const List<Widget> _pages = [
+    QuickSendPage(),
+    ContactsPage(),
+    MessagesPage(),
+    SettingsPage(),
+  ];
 
-  late TabController _tabController;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+  /// لون كل قسم (موحّد الآن بأزرق الشعار)
+  static AccentColors _accentFor(AppPalette p, int index) =>
+      [p.send, p.contacts, p.messages, p.settings][index];
 
-  // البيانات
-  List<Contact> _contacts = [];
-  List<Message> _messages = [];
+  static const List<_Destination> _destinations = [
+    _Destination('إرسال', Icons.send_outlined, Icons.send_rounded),
+    _Destination(
+      'الجهات',
+      Icons.people_outline_rounded,
+      Icons.people_alt_rounded,
+    ),
+    _Destination(
+      'الرسائل',
+      Icons.chat_bubble_outline_rounded,
+      Icons.chat_bubble_rounded,
+    ),
+    _Destination('الإعدادات', Icons.settings_outlined, Icons.settings_rounded),
+  ];
 
-  // الخدمات
-  final StorageService _storageService = StorageService();
-  final MessagingService _messagingService = MessagingService(); // تم التغيير
+  late final AnimationController _enter = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 340),
+    value: 1,
+  );
+  late final Animation<double> _enterCurve = CurvedAnimation(
+    parent: _enter,
+    curve: Curves.easeOutCubic,
+  );
 
+  final IncomingShareService _shareService = IncomingShareService();
 
-  // حالة التحميل
-  bool _isLoading = true;
+  int _index = 0;
+
+  static const int _settingsIndex = 3;
+
+  /// الغياب بهذه المدة أو أكثر ثم العودة يُعدّ فتحاً جديداً للتطبيق
+  static const Duration _newSessionAfter = Duration(minutes: 10);
+  DateTime? _pausedAt;
+
+  /// أثناء التحديث الإجباري لا نتجاوز شاشة التحديث بسبب مشاركة قادمة
+  bool _forceUpdateOpen = false;
 
   @override
   void initState() {
     super.initState();
-    ForceUpdateChecker().checkForUpdate(context);
-    _initializeControllers();
-    _loadData();
+    WidgetsBinding.instance.addObserver(this);
+    _shareService.start(_onShared);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
   }
 
-  /// تهيئة المتحكمات والرسوم المتحركة
-  void _initializeControllers() {
-    _tabController = TabController(length:4, vsync: this);
-    _animationController = AnimationController(
-      duration: AppConstants.slowAnimation,
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-  }
+  /// وصل رقم أو نص من تطبيق آخر: نفتح صفحة الإرسال ونضع الرقم فيها
+  Future<void> _onShared(IncomingShare share) async {
+    if (!mounted || _forceUpdateOpen) return;
+    final numbers = share.numbers;
 
-  /// تحميل البيانات من التخزين المحلي
-  Future<void> _loadData() async {
-    try {
-      setState(() => _isLoading = true);
-
-      final contacts = await _storageService.getContacts();
-      final messages = await _storageService.getMessages();
-
-      setState(() {
-        _contacts = contacts;
-        _messages = messages;
-        _isLoading = false;
-      });
-
-      // بدء الرسم المتحرك بعد التحميل
-      _animationController.forward();
-    } catch (e) {
-      setState(() => _isLoading = false);
-      _showErrorMessage('فشل في تحميل البيانات: ${e.toString()}');
+    if (numbers.isEmpty) {
+      AppSnack.show(context, 'لا يوجد رقم هاتف في المحتوى المشارك');
+      return;
     }
-  }
 
-  /// إضافة جهة اتصال جديدة
-  Future<void> _addContact(Contact contact) async {
-    try {
-      await _storageService.saveContact(contact);
-      setState(() {
-        _contacts.add(contact);
-      });
-      _showSuccessMessage(AppStrings.contactAdded);
-    } catch (e) {
-      _showErrorMessage('فشل في إضافة جهة الاتصال: ${e.toString()}');
+    // إغلاق أي ورقة أو حوار مفتوح والرجوع لصفحة الإرسال
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    _select(0);
+
+    var chosen = numbers.first;
+    if (numbers.length > 1) {
+      final picked = await showNumberChooser(context, numbers);
+      if (picked == null || !mounted) return;
+      chosen = picked;
     }
+    AppScope.read(context).receiveIncoming(chosen);
   }
 
-  /// تحديث جهة اتصال
-  Future<void> _updateContact(Contact contact) async {
-    try {
-      await _storageService.updateContact(contact);
-      final index = _contacts.indexWhere((c) => c.id == contact.id);
-      if (index != -1) {
-        setState(() {
-          _contacts[index] = contact;
-        });
-        _showSuccessMessage(AppStrings.contactUpdated);
-      }
-    } catch (e) {
-      _showErrorMessage('فشل في تحديث جهة الاتصال: ${e.toString()}');
-    }
-  }
-
-  /// حذف جهة اتصال
-  Future<void> _deleteContact(String contactId) async {
-    try {
-      await _storageService.deleteContact(contactId);
-      setState(() {
-        _contacts.removeWhere((c) => c.id == contactId);
-      });
-      _showSuccessMessage(AppStrings.contactDeleted);
-    } catch (e) {
-      _showErrorMessage('فشل في حذف جهة الاتصال: ${e.toString()}');
-    }
-  }
-
-  /// إضافة رسالة جديدة
-  Future<void> _addMessage(Message message) async {
-    try {
-      await _storageService.saveMessage(message);
-      setState(() {
-        _messages.add(message);
-      });
-      _showSuccessMessage(AppStrings.messageAdded);
-    } catch (e) {
-      _showErrorMessage('فشل في إضافة الرسالة: ${e.toString()}');
-    }
-  }
-
-  /// تحديث رسالة
-  Future<void> _updateMessage(Message message) async {
-    try {
-      await _storageService.updateMessage(message);
-      final index = _messages.indexWhere((m) => m.id == message.id);
-      if (index != -1) {
-        setState(() {
-          _messages[index] = message;
-        });
-        _showSuccessMessage(AppStrings.messageUpdated);
-      }
-    } catch (e) {
-      _showErrorMessage('فشل في تحديث الرسالة: ${e.toString()}');
-    }
-  }
-
-  /// حذف رسالة
-  Future<void> _deleteMessage(String messageId) async {
-    try {
-      await _storageService.deleteMessage(messageId);
-      setState(() {
-        _messages.removeWhere((m) => m.id == messageId);
-      });
-      _showSuccessMessage(AppStrings.messageDeleted);
-    } catch (e) {
-      _showErrorMessage('فشل في حذف الرسالة: ${e.toString()}');
-    }
-  }
-
-  /// إرسال رسالة
-  /// نسخة مبسطة من BottomSheet لاختيار تطبيق المراسلة
-  Future<void> _openMessagingApp(String phone, String message) async {
-    try {
-      await showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) => Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Title
-              Text(
-                'اختر طريقة المشاركة',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'إلى: $phone',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Messaging App Button 1 - WhatsApp
-              _buildAppButton(
-                context: context,
-                title: 'فتح تطبيق رسالة فورية',
-                icon: Icons.message_outlined,
-                color: Colors.green.shade600,
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _launchApp(MessagingPlatform.whatsapp, phone, message);
-                },
-              ),
-
-              const SizedBox(height: 12),
-
-              // Messaging App Button 2 - Telegram
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildAppButton(
-                      context: context,
-                      title: 'فتح تطبيق دردشة',
-                      icon: Icons.chat_bubble_outline,
-                      color: Colors.blue.shade700,
-                      onTap: () async {
-                        Navigator.pop(context);
-                        await _launchApp(MessagingPlatform.telegram, phone, message);
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  // SMS Button
-                  Expanded(
-                    child: _buildAppButton(
-                      context: context,
-                      title: 'فتح تطبيقات اخرى',
-                      icon: Icons.sms_outlined,
-                      color: Colors.deepOrange.shade600,
-                      onTap: () async {
-                        Navigator.pop(context);
-                        await _launchApp(MessagingPlatform.sms, phone, message);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Cancel Button
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'إلغاء',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-
-              SizedBox(height: MediaQuery.of(context).padding.bottom),
-            ],
-          ),
-        ),
-      );
-    } catch (e) {
-      _showErrorMessage('فشل في عرض خيارات المراسلة: ${e.toString()}');
-    }
-  }
-
-
-
-  /// بناء زر التطبيق
-  Widget _buildAppButton({
-    required BuildContext context,
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, color: Colors.white),
-        label: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-        ),
-      ),
-    );
-  }
-
-  /// فتح التطبيق المحدد
-  Future<void> _launchApp(
-      MessagingPlatform platform,
-      String phone,
-      String message,
-      ) async {
-    try {
-      final success = await _messagingService.openMessagingApp(
-        phone,
-        message,
-        platform: platform,
-      );
-
-      if (success) {
-        String platformName = _getPlatformName(platform);
-        _showSuccessMessage('تم فتح $platformName بنجاح');
-      } else {
-        _showErrorMessage('فشل في فتح التطبيق المحدد');
-      }
-    } catch (e) {
-      _showErrorMessage('فشل في فتح تطبيق المراسلة: ${e.toString()}');
-    }
-  }
-
-  /// الحصول على اسم المنصة بالعربية
-  String _getPlatformName(MessagingPlatform platform) {
-    switch (platform) {
-      case MessagingPlatform.whatsapp:
-        return 'الواتساب';
-      case MessagingPlatform.telegram:
-        return 'التليجرام';
-      case MessagingPlatform.sms:
-        return 'الرسائل النصية';
-      case MessagingPlatform.auto:
-        return 'التطبيق المناسب';
-    }
-  }
-  // Future<void> _openMessagingApp(String phone, String message) async {
-  //   try {
-  //     await _messagingService.openMessagingApp(phone, message);
-  //     _showSuccessMessage(AppStrings.messagingAppOpened); // تم التغيير
-  //   } catch (e) {
-  //     _showErrorMessage('فشل في فتح تطبيق المراسلة: ${e.toString()}'); // تم التغيير
-  //   }
-  // }
-
-  /// عرض رسالة نجاح
-  void _showSuccessMessage(String message) {
-    AppUtils.showCustomSnackBar(context, message, isSuccess: true);
-  }
-
-  /// عرض رسالة خطأ
-  void _showErrorMessage(String message) {
-    AppUtils.showCustomSnackBar(context, message, isError: true);
+  Future<void> _checkForUpdate() async {
+    final update = await ForceUpdateChecker().check();
+    if (!mounted || update == null) return;
+    _forceUpdateOpen = update.forceUpdate;
+    await showUpdateDialog(context, update);
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return _buildLoadingScreen();
-    }
-
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: AppConstants.primaryGradient,
-          ),
-          child: SafeArea(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                children: [
-                  _buildAppHeader(),
-                  _buildTabBar(),
-                  Expanded(
-                    child: _buildTabBarView(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// بناء شاشة التحميل
-  Widget _buildLoadingScreen() {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppConstants.primaryGradient,
-        ),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-              SizedBox(height: AppConstants.defaultPadding),
-              Text(
-                AppStrings.loading,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: AppConstants.bodyLarge,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// بناء رأس التطبيق
-  Widget _buildAppHeader() {
-    return CustomAppBar(
-      title: AppStrings.appTitle,
-      subtitle: AppStrings.appSubtitle,
-      contactsCount: _contacts.length,
-      messagesCount: _messages.length,
-    );
-  }
-
-  /// بناء شريط التبويبات
-  Widget _buildTabBar() {
-    final padding = ResponsiveHelper.getResponsivePadding(context);
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 6,vertical:2 ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-      ),
-      child: TabBar(
-        tabAlignment: TabAlignment.center,
-        controller: _tabController,
-        indicatorSize: TabBarIndicatorSize.tab,
-        physics: BouncingScrollPhysics(),
-        // indicatorPadding: EdgeInsets.symmetric(
-        //   horizontal: 10,
-        //   vertical: 4,
-        // ),
-        indicator: BoxDecoration(
-          color: Colors.white10,
-          borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.white54,
-        isScrollable: true,
-        labelStyle: TextStyle(
-          fontSize: ResponsiveHelper.getResponsiveFontSize(
-            context,
-            AppConstants.bodySmall,
-          ),
-          fontWeight: FontWeight.bold,
-        ),
-        tabs: [
-          _buildTab(Icons.open_in_new, AppStrings.quickSendTab),
-          _buildTab(Icons.contacts, AppStrings.contactsTab),
-          _buildTab(Icons.message, AppStrings.messagesTab),
-          // _buildTab(Icons.group, AppStrings.bulkSendTab),
-          _buildTab(Icons.settings, AppStrings.settingsTab),
-        ],
-      ),
-    );
-  }
-
-  /// بناء تبويب واحد
-  Widget _buildTab(IconData icon, String text) {
-    final iconSize = ResponsiveHelper.getResponsiveIconSize(
-      context,
-      AppConstants.iconMedium,
-    );
-
-    return Tab(
-      icon: Icon(icon, size: iconSize),
-      text: text,
-    );
-  }
-
-  /// بناء محتوى التبويبات
-  Widget _buildTabBarView() {
-    return TabBarView(
-      controller: _tabController,
-      children: [
-        QuickSendPage(
-          messages: _messages,
-          onSendMessage: _openMessagingApp,
-          onUpdateMessage: _updateMessage,
-        ),
-        ContactsPage(
-          contacts: _contacts,
-          onAddContact: _addContact,
-          onUpdateContact: _updateContact,
-          onDeleteContact: _deleteContact,
-          onSendMessage: _openMessagingApp,
-        ),
-        MessagesPage(
-          messages: _messages,
-          onAddMessage: _addMessage,
-          onUpdateMessage: _updateMessage,
-          onDeleteMessage: _deleteMessage,
-          onSendMessage: _openMessagingApp,
-          contacts: _contacts,
-        ),
-        // BulkSendPage(
-        //   contacts: _contacts,
-        //   onSendBulkMessage: _sendBulkMessage,
-        // ),
-        SettingsPage(
-          contacts: _contacts,
-          messages: _messages,
-          onExportContacts: _exportContacts,
-          onExportMessages: _exportMessages,
-          onImportContacts: _importContacts,
-          onImportMessages: _importMessages,
-          onClearAllData: _clearAllData,
-        ),
-      ],
-    );
-  }
-
-
-
-
-
-  /// تصدير جهات الاتصال
-  Future<void> _exportContacts() async {
-    try {
-      final jsonData = Contact.toJsonList(_contacts);
-      await AppUtils.copyToClipboard(context, jsonData.toString());
-      _showSuccessMessage('تم نسخ بيانات جهات الاتصال إلى الحافظة');
-    } catch (e) {
-      _showErrorMessage('فشل في تصدير جهات الاتصال: ${e.toString()}');
-    }
-  }
-
-  /// تصدير الرسائل
-  Future<void> _exportMessages() async {
-    try {
-      final jsonData = Message.toJsonList(_messages);
-      await AppUtils.copyToClipboard(context, jsonData.toString());
-      _showSuccessMessage('تم نسخ بيانات الرسائل إلى الحافظة');
-    } catch (e) {
-      _showErrorMessage('فشل في تصدير الرسائل: ${e.toString()}');
-    }
-  }
-
-  /// استيراد جهات الاتصال
-  Future<void> _importContacts() async {
-    _showErrorMessage('ميزة الاستيراد قيد التطوير');
-  }
-
-  /// استيراد الرسائل
-  Future<void> _importMessages() async {
-    _showErrorMessage('ميزة الاستيراد قيد التطوير');
-  }
-
-  /// مسح جميع البيانات
-  Future<void> _clearAllData() async {
-    final confirmed = await AppUtils.showConfirmDialog(
-      context,
-      'تأكيد الحذف',
-      AppStrings.confirmClearData,
-      confirmText: 'حذف الكل',
-      isDestructive: true,
-      icon: Icons.delete_forever,
-    );
-
-    if (confirmed == true) {
-      try {
-        await _storageService.clearAllData();
-        setState(() {
-          _contacts.clear();
-          _messages.clear();
-        });
-        _showSuccessMessage(AppStrings.dataCleared);
-      } catch (e) {
-        _showErrorMessage('فشل في مسح البيانات: ${e.toString()}');
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _pausedAt = DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      // غاب المستخدم فترة ثم عاد: نعدّه فتحاً جديداً للتطبيق فيعود عرض المكافأة عند دخول الإعدادات
+      final away = _pausedAt;
+      _pausedAt = null;
+      if (away != null && DateTime.now().difference(away) >= _newSessionAfter) {
+        AdsService.instance.startNewSession();
       }
+      // العودة من تطبيق المراسلة بعد الإرسال: نقطة انتقال طبيعية لإعلان بيني
+      AdsService.instance.showInterstitialIfDue();
     }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
-    _animationController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _shareService.stop();
+    _enter.dispose();
     super.dispose();
+  }
+
+  void _select(int index) {
+    if (index == _index) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    HapticFeedback.selectionClick();
+    setState(() => _index = index);
+    _enter.forward(from: 0);
+
+    final ads = AdsService.instance;
+    if (index == _settingsIndex && ads.shouldOfferRewardOnSettings) {
+      // أول دخول للإعدادات في هذه الجلسة: عرض إعلان بمكافأة (بشاشة تمهيدية وخيار الرفض)
+      ads.markSettingsPromptShown();
+      Future<void>.delayed(const Duration(milliseconds: 350), () {
+        if (mounted) offerRewardIntro(context);
+      });
+    } else {
+      ads.onTabSwitched();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (AppScope.of(context).isLoading) return const _LoadingScreen();
+
+    return PopScope(
+      canPop: _index == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _select(0);
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Scaffold(
+          body: Stack(
+            children: [
+              _AccentGlow(accent: _accentFor(context.palette, _index)),
+              SafeArea(
+                bottom: false,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppSpace.maxContentWidth,
+                    ),
+                    child: FadeTransition(
+                      opacity: _enterCurve,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.02),
+                          end: Offset.zero,
+                        ).animate(_enterCurve),
+                        child: IndexedStack(
+                          index: _index,
+                          children: [
+                            for (var i = 0; i < _pages.length; i++)
+                              ActiveTab(
+                                active: i == _index,
+                                child: AccentScope(
+                                  accent: _accentFor(context.palette, i),
+                                  child: _pages[i],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: DecoratedBox(
+            decoration: BoxDecoration(
+              color: context.palette.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 24,
+                  offset: const Offset(0, -6),
+                ),
+              ],
+            ),
+            child: Center(
+              heightFactor: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: AppSpace.maxContentWidth,
+                ),
+                child: AccentScope(
+                  accent: _accentFor(context.palette, _index),
+                  child: NavigationBar(
+                    selectedIndex: _index,
+                    onDestinationSelected: _select,
+                    destinations: [
+                      for (final d in _destinations)
+                        NavigationDestination(
+                          icon: Icon(d.icon),
+                          selectedIcon: Icon(d.selectedIcon),
+                          label: d.label,
+                          tooltip: d.label,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Destination {
+  const _Destination(this.label, this.icon, this.selectedIcon);
+
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+}
+
+/// توهّج لوني ناعم في أعلى الشاشة يتبدّل بسلاسة مع لون القسم
+class _AccentGlow extends StatelessWidget {
+  const _AccentGlow({required this.accent});
+
+  final AccentColors accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final strength = context.isDark ? 0.20 : 0.10;
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 360,
+      child: IgnorePointer(
+        child: TweenAnimationBuilder<Color?>(
+          tween: ColorTween(end: accent.glow),
+          duration: const Duration(milliseconds: 500),
+          builder: (context, color, _) {
+            final glow = color ?? accent.glow;
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.8, -1.1),
+                  radius: 1.2,
+                  colors: [
+                    glow.withValues(alpha: strength),
+                    glow.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingScreen extends StatelessWidget {
+  const _LoadingScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.85, end: 1),
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutBack,
+          builder: (context, scale, child) => Opacity(
+            opacity: scale.clamp(0.0, 1.0),
+            child: Transform.scale(scale: scale, child: child),
+          ),
+          child: Image.asset(Assets.logoPng, width: 110),
+        ),
+      ),
+    );
   }
 }
