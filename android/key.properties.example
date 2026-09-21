@@ -1,7 +1,0 @@
-# انسخ هذا الملف إلى android/key.properties (غير مرفوع على git) واملأه ببيانات مفتاح الرفع.
-# لا تشارك هذا الملف ولا مفتاح .jks مع أحد.
-storePassword=ضع_كلمة_مرور_المخزن
-keyPassword=ضع_كلمة_مرور_المفتاح
-keyAlias=ضع_اسم_المفتاح
-# مسار مفتاح التطبيق على جهازك (وجدناه هنا):
-storeFile=C:/Users/Admin/androidKeys/sandlyNKey01.jks
