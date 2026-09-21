@@ -4,8 +4,12 @@ import 'package:sendly/presentation/pages/settings/ad_free_sheet.dart';
 
 void main() {
   group('مستويات إخفاء الإعلانات', () {
-    test('إعلان ← 3 ساعات، إعلانان ← 6، ثلاثة ← 12', () {
-      expect(AdsService.rewardTiers.map((d) => d.inHours).toList(), [3, 6, 12]);
+    test('إعلان ← نصف ساعة، إعلانان ← ساعة، ثلاثة ← ساعتان', () {
+      expect(AdsService.rewardTiers.map((d) => d.inMinutes).toList(), [
+        30,
+        60,
+        120,
+      ]);
     });
 
     test('لا مكافأة بلا مشاهدة ولا يمكن الزيادة بلا فترة سارية', () {
@@ -23,6 +27,18 @@ void main() {
       expect(arabicHoursLabel(3), '3 ساعات');
       expect(arabicHoursLabel(6), '6 ساعات');
       expect(arabicHoursLabel(12), '12 ساعة');
+    });
+
+    test('تسمية المدد بالعربية', () {
+      expect(arabicDurationLabel(const Duration(minutes: 30)), 'نصف ساعة');
+      expect(arabicDurationLabel(const Duration(hours: 1)), 'ساعة');
+      expect(arabicDurationLabel(const Duration(minutes: 90)), 'ساعة ونصف');
+      expect(arabicDurationLabel(const Duration(hours: 2)), 'ساعتان');
+      expect(arabicDurationLabel(const Duration(minutes: 45)), '45 دقيقة');
+      expect(
+        arabicDurationLabel(const Duration(minutes: 150)),
+        'ساعتان و30 دقيقة',
+      );
     });
 
     test('عدد الإعلانات بصيغتي الفاعل والمفعول', () {

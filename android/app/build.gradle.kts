@@ -65,6 +65,17 @@ android {
 
 }
 
+// حماية: لا يُبنى AAB للرفع بمفتاح debug (Google Play ترفضه). أنشئ android/key.properties
+// (انظر key.properties.example). بناء APK للتجربة لا يتأثر.
+gradle.taskGraph.whenReady {
+    if (allTasks.any { it.name == "bundleRelease" } && !keystorePropertiesFile.exists()) {
+        throw GradleException(
+            "android/key.properties مفقود: لا يمكن بناء AAB للنشر بمفتاح debug. " +
+                "انسخ android/key.properties.example إلى key.properties واملأه ببيانات مفتاح الرفع."
+        )
+    }
+}
+
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)

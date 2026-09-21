@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../app/theme/app_palette.dart';
 import '../../../core/helpers/message_format.dart';
+import 'emoji_art_sheet.dart';
 import 'emoji_sheet.dart';
 import 'formatted_text.dart';
 
@@ -90,6 +91,12 @@ class _FormattedFieldState extends State<FormattedField> {
     _apply((v) => MessageFormat.insertText(v, emoji));
   }
 
+  Future<void> _pickArt() async {
+    final art = await showEmojiArtSheet(context);
+    if (art == null || !mounted) return;
+    _apply((v) => MessageFormat.insertBlock(v, art));
+  }
+
   Widget _contextMenu(BuildContext context, EditableTextState state) {
     final items = [...state.contextMenuButtonItems];
     if (!state.textEditingValue.selection.isCollapsed) {
@@ -151,6 +158,7 @@ class _FormattedFieldState extends State<FormattedField> {
                 onNumbering: () => _apply(MessageFormat.toggleNumbering),
                 onDivider: () => _apply(MessageFormat.insertDivider),
                 onEmoji: _pickEmoji,
+                onArt: _pickArt,
                 onAuto: () => _apply(MessageFormat.autoFormat),
                 onClear: () => _apply(MessageFormat.clearFormatting),
                 onUndo: _undo.undo,
@@ -174,6 +182,7 @@ class _FormatToolbar extends StatelessWidget {
     required this.onNumbering,
     required this.onDivider,
     required this.onEmoji,
+    required this.onArt,
     required this.onAuto,
     required this.onClear,
     required this.onUndo,
@@ -188,6 +197,7 @@ class _FormatToolbar extends StatelessWidget {
   final VoidCallback onNumbering;
   final VoidCallback onDivider;
   final VoidCallback onEmoji;
+  final VoidCallback onArt;
   final VoidCallback onAuto;
   final VoidCallback onClear;
   final VoidCallback onUndo;
@@ -208,9 +218,9 @@ class _FormatToolbar extends StatelessWidget {
       height: 46,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: p.surface,
+        color: context.accent.color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(color: context.accent.color.withValues(alpha: 0.16)),
+        border: Border.all(color: context.accent.color.withValues(alpha: 0.24)),
       ),
       child: ListView(
         scrollDirection: Axis.horizontal,
@@ -260,6 +270,11 @@ class _FormatToolbar extends StatelessWidget {
             icon: Icons.emoji_emotions_outlined,
             tooltip: 'رموز تعبيرية',
             onTap: onEmoji,
+          ),
+          _FormatButton(
+            icon: Icons.interests_rounded,
+            tooltip: 'رسومات بالرموز',
+            onTap: onArt,
           ),
           _FormatButton(
             icon: Icons.auto_fix_high_rounded,

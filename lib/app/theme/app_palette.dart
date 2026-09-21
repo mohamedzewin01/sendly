@@ -108,87 +108,87 @@ class AppPalette extends ThemeExtension<AppPalette> {
   final AccentColors messages;
   final AccentColors settings;
 
-  /// هوية «رمل وفيروز»: كريمي دافئ + فيروزي عميق، وكل قسم بلون ترابي خاص به.
-  /// تعبئة الأزرار مصمتة (بلا تدرج) والتدرج للبطاقة الرئيسية في الإعدادات فقط.
+  /// هوية «أزرق منعش»: خلفية سماوية فاتحة وأزرق ساطع، وكل قسم بلون حيّ خاص به
+  /// (أزرق، نعناعي، بنفسجي، مرجاني). تعبئة الأزرار مصمتة والتدرج للبطاقة الرئيسية فقط.
   static const LinearGradient _brandLight = LinearGradient(
-    colors: [Color(0xFF0F766E), Color(0xFF0A4F4A)],
+    colors: [Color(0xFF0B78F0), Color(0xFF0A56C8)],
     begin: Alignment.topRight,
     end: Alignment.bottomLeft,
   );
   static const LinearGradient _brandDark = LinearGradient(
-    colors: [Color(0xFF0F766E), Color(0xFF0A4F4A)],
+    colors: [Color(0xFF0B78F0), Color(0xFF0A56C8)],
     begin: Alignment.topRight,
     end: Alignment.bottomLeft,
   );
 
-  static const LinearGradient _tealFill = LinearGradient(
-    colors: [Color(0xFF0F766E), Color(0xFF0F766E)],
+  static const LinearGradient _blueFill = LinearGradient(
+    colors: [Color(0xFF0B78F0), Color(0xFF0B78F0)],
+  );
+  static const LinearGradient _mintFill = LinearGradient(
+    colors: [Color(0xFF00947F), Color(0xFF00947F)],
+  );
+  static const LinearGradient _violetFill = LinearGradient(
+    colors: [Color(0xFF7C5CFC), Color(0xFF7C5CFC)],
   );
   static const LinearGradient _coralFill = LinearGradient(
-    colors: [Color(0xFFD9472F), Color(0xFFD9472F)],
-  );
-  static const LinearGradient _plumFill = LinearGradient(
-    colors: [Color(0xFF7B3FA0), Color(0xFF7B3FA0)],
-  );
-  static const LinearGradient _amberFill = LinearGradient(
-    colors: [Color(0xFFA8631A), Color(0xFFA8631A)],
+    colors: [Color(0xFFE04E28), Color(0xFFE04E28)],
   );
 
   static const AccentColors _sendLight = AccentColors(
-    color: Color(0xFF0F766E),
-    soft: Color(0xFFD9F0EC),
-    gradient: _tealFill,
+    color: Color(0xFF0B78F0),
+    soft: Color(0xFFDCEBFF),
+    gradient: _blueFill,
   );
   static const AccentColors _contactsLight = AccentColors(
-    color: Color(0xFFD9472F),
-    soft: Color(0xFFFDE3DC),
-    gradient: _coralFill,
+    color: Color(0xFF00947F),
+    soft: Color(0xFFD2F5EE),
+    gradient: _mintFill,
   );
   static const AccentColors _messagesLight = AccentColors(
-    color: Color(0xFF7B3FA0),
-    soft: Color(0xFFF1E4F8),
-    gradient: _plumFill,
+    color: Color(0xFF7C5CFC),
+    soft: Color(0xFFE9E3FF),
+    gradient: _violetFill,
   );
   static const AccentColors _settingsLight = AccentColors(
-    color: Color(0xFFA8631A),
-    soft: Color(0xFFFAE9CF),
-    gradient: _amberFill,
+    color: Color(0xFFE04E28),
+    soft: Color(0xFFFFE1D8),
+    gradient: _coralFill,
   );
 
   static const AccentColors _sendDark = AccentColors(
-    color: Color(0xFF4FD1BF),
-    soft: Color(0xFF15332F),
-    gradient: _tealFill,
+    color: Color(0xFF5BA8FF),
+    soft: Color(0xFF12304F),
+    gradient: _blueFill,
   );
   static const AccentColors _contactsDark = AccentColors(
-    color: Color(0xFFFF8F78),
-    soft: Color(0xFF3C1F19),
-    gradient: _coralFill,
+    color: Color(0xFF3DD9C2),
+    soft: Color(0xFF0E3A36),
+    gradient: _mintFill,
   );
   static const AccentColors _messagesDark = AccentColors(
-    color: Color(0xFFD2A6EC),
-    soft: Color(0xFF33203F),
-    gradient: _plumFill,
+    color: Color(0xFFB09CFF),
+    soft: Color(0xFF2A2350),
+    gradient: _violetFill,
   );
   static const AccentColors _settingsDark = AccentColors(
-    color: Color(0xFFF0B45C),
-    soft: Color(0xFF3A2B14),
-    gradient: _amberFill,
+    color: Color(0xFFFF9A7D),
+    soft: Color(0xFF4A2418),
+    gradient: _coralFill,
   );
 
   static const AppPalette light = AppPalette(
-    bg: Color(0xFFFBF6EE),
+    bg: Color(0xFFF0F8FF),
     surface: Color(0xFFFFFFFF),
-    surfaceAlt: Color(0xFFF5EDE1),
-    border: Color(0xFFE9DECD),
-    ink: Color(0xFF221A14),
-    inkSoft: Color(0xFF6A5B4E),
-    inkFaint: Color(0xFF8C7B6C),
-    primary: Color(0xFF0F766E),
-    primarySoft: Color(0xFFD9F0EC),
-    success: Color(0xFF2F9E44),
+    surfaceAlt: Color(0xFFE4F0FC),
+    border: Color(0xFFD3E5F8),
+    ink: Color(0xFF0B2545),
+    inkSoft: Color(0xFF4A6283),
+    inkFaint: Color(0xFF6F86A3),
+    primary: Color(0xFF0B78F0),
+    primarySoft: Color(0xFFDCEBFF),
+    success: Color(0xFF12A05C),
     warning: Color(0xFFC77D0A),
-    danger: Color(0xFFD0342C),
+    danger: Color(0xFFE0393E),
     brand: _brandLight,
     send: _sendLight,
     contacts: _contactsLight,
@@ -197,18 +197,18 @@ class AppPalette extends ThemeExtension<AppPalette> {
   );
 
   static const AppPalette dark = AppPalette(
-    bg: Color(0xFF16110E),
-    surface: Color(0xFF211A15),
-    surfaceAlt: Color(0xFF2C231D),
-    border: Color(0xFF3B2F26),
-    ink: Color(0xFFF6EDE2),
-    inkSoft: Color(0xFFBBAA99),
-    inkFaint: Color(0xFF8D7D6D),
-    primary: Color(0xFF4FD1BF),
-    primarySoft: Color(0xFF15332F),
-    success: Color(0xFF5BD68A),
-    warning: Color(0xFFF0B45C),
-    danger: Color(0xFFFF8A80),
+    bg: Color(0xFF0C1522),
+    surface: Color(0xFF142033),
+    surfaceAlt: Color(0xFF1C2A40),
+    border: Color(0xFF2A3B55),
+    ink: Color(0xFFEAF3FF),
+    inkSoft: Color(0xFF9DB4D0),
+    inkFaint: Color(0xFF6F87A5),
+    primary: Color(0xFF5BA8FF),
+    primarySoft: Color(0xFF12304F),
+    success: Color(0xFF4CD48B),
+    warning: Color(0xFFF2B84B),
+    danger: Color(0xFFFF7A80),
     brand: _brandDark,
     send: _sendDark,
     contacts: _contactsDark,

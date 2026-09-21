@@ -27,8 +27,11 @@ Future<void> offerRewardIntro(BuildContext context) async {
   final earned = await AdsService.instance.watchAdToHideAds();
   if (!context.mounted || !earned) return;
   final tier = AdsService.instance.adFreeTier;
-  final hours = AdsService.rewardTiers[tier - 1].inHours;
-  AppSnack.success(context, 'تم! الإعلانات مخفية ${arabicHoursLabel(hours)}');
+  final duration = AdsService.rewardTiers[tier - 1];
+  AppSnack.success(
+    context,
+    'تم! الإعلانات مخفية ${arabicDurationLabel(duration)}',
+  );
 }
 
 class _RewardIntroDialog extends StatefulWidget {
@@ -67,16 +70,16 @@ class _RewardIntroDialogState extends State<_RewardIntroDialog> {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final hours = AdsService.rewardTiers.first.inHours;
+    final duration = AdsService.rewardTiers.first;
 
     return AlertDialog(
       icon: Icon(Icons.visibility_off_rounded, color: p.primary, size: 30),
-      title: Text('أخفِ الإعلانات ${arabicHoursLabel(hours)}'),
+      title: Text('أخفِ الإعلانات ${arabicDurationLabel(duration)}'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'شاهد إعلاناً واحداً وتختفي الإعلانات من التطبيق ${arabicHoursLabel(hours)}.',
+            'شاهد إعلاناً واحداً وتختفي الإعلانات من التطبيق ${arabicDurationLabel(duration)}.',
             textAlign: TextAlign.center,
             style: context.text.bodyMedium?.copyWith(color: p.inkSoft),
           ),
@@ -103,6 +106,18 @@ class _RewardIntroDialogState extends State<_RewardIntroDialog> {
       ],
     );
   }
+}
+
+/// مدة بالعربية: «نصف ساعة» / «ساعة» / «ساعة ونصف» / «ساعتان» / «45 دقيقة»
+String arabicDurationLabel(Duration d) {
+  final minutes = d.inMinutes;
+  if (minutes == 30) return 'نصف ساعة';
+  if (minutes < 60) return '$minutes دقيقة';
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
+  if (m == 0) return arabicHoursLabel(h);
+  if (h == 1 && m == 30) return 'ساعة ونصف';
+  return '${arabicHoursLabel(h)} و$m دقيقة';
 }
 
 /// «ساعة» / «ساعتان» / «3 ساعات» / «12 ساعة»
@@ -228,10 +243,10 @@ class _AdFreeSheetState extends State<_AdFreeSheet> {
     });
     if (gained > 0) {
       final tier = ads.adFreeTier;
-      final hours = AdsService.rewardTiers[tier - 1].inHours;
+      final duration = AdsService.rewardTiers[tier - 1];
       AppSnack.success(
         context,
-        'تم! الإعلانات مخفية ${arabicHoursLabel(hours)}',
+        'تم! الإعلانات مخفية ${arabicDurationLabel(duration)}',
       );
     }
   }
@@ -251,7 +266,7 @@ class _AdFreeSheetState extends State<_AdFreeSheet> {
         final target = _effectiveTarget(tier);
         final need = target - tier;
         final String buttonLabel = canMore
-            ? 'شاهد ${adsCountObject(need)} · ${arabicHoursLabel(tiers[target - 1].inHours)}'
+            ? 'شاهد ${adsCountObject(need)} · ${arabicDurationLabel(tiers[target - 1])}'
             : 'تم';
 
         return SheetScaffold(
@@ -304,7 +319,7 @@ class _AdFreeSheetState extends State<_AdFreeSheet> {
                     subtitle: (tier > 0 && i + 1 > tier)
                         ? 'المتبقي: ${adsCountLabel(i + 1 - tier)}'
                         : null,
-                    reward: arabicHoursLabel(tiers[i].inHours),
+                    reward: arabicDurationLabel(tiers[i]),
                     number: i + 1,
                     done: tier > i,
                     selected: canMore && i + 1 == target,

@@ -168,12 +168,12 @@ class AdsService extends ChangeNotifier {
   static const String _prefsAdFreeUntil = 'ads_free_until_ms';
   static const String _prefsAdFreeTier = 'ads_free_tier';
 
-  /// مدة إخفاء الإعلانات حسب عدد الإعلانات المشاهَدة: إعلان ← 3 ساعات، إعلانان ← 6، ثلاثة ← 12.
+  /// مدة إخفاء الإعلانات حسب عدد الإعلانات المشاهَدة: إعلان ← نصف ساعة، إعلانان ← ساعة، ثلاثة ← ساعتان.
   /// كل إعلان اختياري بضغطة من المستخدم، ويحتفظ بما كسبه إن توقف.
   static const List<Duration> rewardTiers = [
-    Duration(hours: 3),
-    Duration(hours: 6),
-    Duration(hours: 12),
+    Duration(minutes: 30),
+    Duration(hours: 1),
+    Duration(hours: 2),
   ];
 
   DateTime? _adFreeUntil;
@@ -223,7 +223,7 @@ class AdsService extends ChangeNotifier {
   bool get canOfferReward => _ready && _enabled;
 
   /// يحمّل ويعرض إعلاناً بينياً بمكافأة بعد موافقة المستخدم الصريحة،
-  /// وعند مشاهدته ينتقل لمستوى المكافأة التالي (3 ثم 6 ثم 12 ساعة بلا إعلانات).
+  /// وعند مشاهدته ينتقل لمستوى المكافأة التالي (نصف ساعة ثم ساعة ثم ساعتان بلا إعلانات).
   /// يرجع true إن نال المكافأة.
   Future<bool> watchAdToHideAds() async {
     if (!canOfferReward || !canWatchMore) return false;

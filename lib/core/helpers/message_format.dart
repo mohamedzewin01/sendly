@@ -303,6 +303,26 @@ class MessageFormat {
     );
   }
 
+  /// يُدرج كتلة نص متعددة الأسطر (كرسمة بالرموز) على أسطر مستقلة:
+  /// سطر جديد قبلها إن لم يكن المؤشر في أول سطر، وبعدها سطر جديد ليكمل المستخدم تحتها.
+  static TextEditingValue insertBlock(TextEditingValue v, String block) {
+    final text = v.text;
+    final sel = v.selection.isValid
+        ? v.selection
+        : TextSelection.collapsed(offset: text.length);
+    final before = text.substring(0, sel.start);
+    final after = text.substring(sel.end);
+    final lead = before.isEmpty || before.endsWith('\n') ? '' : '\n';
+    final tail = after.startsWith('\n') ? '' : '\n';
+    final inserted = lead + block + tail;
+    return TextEditingValue(
+      text: before + inserted + after,
+      selection: TextSelection.collapsed(
+        offset: before.length + inserted.length,
+      ),
+    );
+  }
+
   /// يزيل علامات التنسيق من التحديد، أو من النص كله إن لم يكن هناك تحديد
   static TextEditingValue clearFormatting(TextEditingValue v) {
     final text = v.text;

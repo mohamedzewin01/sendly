@@ -89,7 +89,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle: until != null
                         ? adFreeUntilLabel(context, until) +
                               (ads.canWatchMore ? ' · اضغط لزيادة المدة' : '')
-                        : 'شاهد إعلاناً وأخفِ الإعلانات حتى 12 ساعة',
+                        : 'شاهد إعلاناً وأخفِ الإعلانات حتى ساعتين',
                     onTap: () => showAdFreeSheet(context),
                   ),
                 ],

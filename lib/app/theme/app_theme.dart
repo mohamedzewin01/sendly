@@ -7,6 +7,31 @@ class AppTheme {
   /// خط التطبيق (مضمَّن داخل التطبيق ولا يتطلب اتصالاً بالإنترنت)
   static const String fontFamily = 'Tajawal';
 
+  /// يكبّر كل أنماط النص بنسبة ثابتة (خط Tajawal أصغر بصرياً من غيره بنفس الحجم)
+  static TextTheme _scaled(TextTheme t, double f) {
+    TextStyle? scale(TextStyle? style) => style?.fontSize == null
+        ? style
+        : style!.copyWith(fontSize: style.fontSize! * f);
+
+    return t.copyWith(
+      displayLarge: scale(t.displayLarge),
+      displayMedium: scale(t.displayMedium),
+      displaySmall: scale(t.displaySmall),
+      headlineLarge: scale(t.headlineLarge),
+      headlineMedium: scale(t.headlineMedium),
+      headlineSmall: scale(t.headlineSmall),
+      titleLarge: scale(t.titleLarge),
+      titleMedium: scale(t.titleMedium),
+      titleSmall: scale(t.titleSmall),
+      bodyLarge: scale(t.bodyLarge),
+      bodyMedium: scale(t.bodyMedium),
+      bodySmall: scale(t.bodySmall),
+      labelLarge: scale(t.labelLarge),
+      labelMedium: scale(t.labelMedium),
+      labelSmall: scale(t.labelSmall),
+    );
+  }
+
   static ThemeData light() => _build(AppPalette.light, Brightness.light);
   static ThemeData dark() => _build(AppPalette.dark, Brightness.dark);
 
@@ -30,11 +55,13 @@ class AppTheme {
     );
 
     final base = ThemeData(brightness: brightness, useMaterial3: true);
-    final textTheme = base.textTheme.apply(
-      fontFamily: fontFamily,
-      fontSizeFactor: 1.06,
-      bodyColor: p.ink,
-      displayColor: p.ink,
+    final textTheme = _scaled(
+      base.textTheme.apply(
+        fontFamily: fontFamily,
+        bodyColor: p.ink,
+        displayColor: p.ink,
+      ),
+      1.06,
     );
 
     OutlineInputBorder inputBorder(Color color, [double width = 1]) {
