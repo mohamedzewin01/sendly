@@ -295,14 +295,9 @@ class AdsService extends ChangeNotifier {
   DateTime? _lastInterstitialAt;
   DateTime? _lastSendAt;
 
-  /// إعلان بيني عند التنقل بين الأقسام أكثر من 5 مرات، بفاصل دقيقتين على الأقل
-  final TabAdPacing _tabPacing = TabAdPacing(
-    threshold: 5,
-    minGap: const Duration(minutes: 2),
-  );
-
-  /// هل عُرض عرض الإعلان بمكافأة عند أول دخول للإعدادات في هذه الجلسة؟
-  bool _settingsPromptShown = false;
+  /// أقل فاصل بين عرضين للإعلان بمكافأة عند دخول الإعدادات (لا يُلحّ عليه عند التنقل السريع)
+  static const Duration _minRewardOfferGap = Duration(minutes: 3);
+  DateTime? _lastRewardOfferAt;
 
   void _loadInterstitial() {
     if (_interstitial != null || _loadingInterstitial || !_ready || !_enabled) {
@@ -351,16 +346,6 @@ class AdsService extends ChangeNotifier {
     if (await _showLoadedInterstitial()) _sendsSinceInterstitial = 0;
   }
 
-  /// يُستدعى عند كل انتقال بين أقسام التطبيق؛ يعرض إعلاناً بينياً بعد أكثر من 5 انتقالات
-  Future<void> onTabSwitched() async {
-    if (!_ready || !_enabled || adFree) return;
-    if (!_tabPacing.registerSwitch(DateTime.now())) return;
-
-    // نمهل حركة الانتقال لتكتمل حتى لا يقاطعها الإعلان
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    await _showLoadedInterstitial();
-  }
-
   Future<bool> _showLoadedInterstitial() async {
     final ad = _interstitial;
     if (ad == null) {
@@ -387,25 +372,22 @@ class AdsService extends ChangeNotifier {
 
   void _commitInterstitialShown(DateTime now) {
     _lastInterstitialAt = now;
-    _tabPacing.commitShown(now);
   }
 
   // ==================== عرض المكافأة عند دخول الإعدادات ====================
 
-  /// هل نعرض شاشة الإعلان بمكافأة الآن؟ عند أول دخول للإعدادات في الجلسة فقط،
-  /// وليس لمن أخفى الإعلانات بالفعل.
-  bool get shouldOfferRewardOnSettings =>
-      canOfferReward && !adFree && canWatchMore && !_settingsPromptShown;
-
-  void markSettingsPromptShown() {
-    _settingsPromptShown = true;
-    _tabPacing.reset(); // لا نُتبعه بإعلان بيني عند الانتقال نفسه
+  /// هل نعرض عرض الإعلان بمكافأة الآن عند دخول الإعدادات؟ إعلانات متاحة، لم تُخفَ بالفعل،
+  /// ولا يزال هناك مستوى مكافأة لم يبلغه المستخدم، ولم يُعرض العرض قبل قليل.
+  bool get shouldOfferRewardOnSettings {
+    if (!canOfferReward || adFree || !canWatchMore) return false;
+    final last = _lastRewardOfferAt;
+    return last == null ||
+        DateTime.now().difference(last) >= _minRewardOfferGap;
   }
 
-  /// جلسة جديدة (المستخدم فتح التطبيق بعد غياب): يعود العرض عند أول دخول للإعدادات
-  void startNewSession() {
-    _settingsPromptShown = false;
-    _tabPacing.reset();
+  /// يُسجَّل عند عرض العرض فعلاً (سواء وافق المستخدم أو رفض) لبدء الفاصل الزمني
+  void markSettingsPromptShown() {
+    _lastRewardOfferAt = DateTime.now();
   }
 
   Future<void> _refreshPrivacyOptions() async {
@@ -417,33 +399,4 @@ class AdsService extends ChangeNotifier {
       notifyListeners();
     }
   }
-}
-
-/// يعدّ الانتقالات بين الأقسام ويقرّر متى يحين إعلان بيني:
-/// بعد أكثر من [threshold] انتقالات، وبفاصل [minGap] على الأقل من آخر إعلان.
-class TabAdPacing {
-  TabAdPacing({required this.threshold, required this.minGap});
-
-  final int threshold;
-  final Duration minGap;
-
-  int _switches = 0;
-  DateTime? _lastShownAt;
-
-  /// يسجّل انتقالاً جديداً ويرجع true إن حان وقت الإعلان
-  bool registerSwitch(DateTime now) {
-    _switches++;
-    if (_switches <= threshold) return false;
-    final last = _lastShownAt;
-    if (last != null && now.difference(last) < minGap) return false;
-    return true;
-  }
-
-  /// يُستدعى عند عرض أي إعلان بيني فعلاً: يصفّر العدّاد ويبدأ الفاصل
-  void commitShown(DateTime now) {
-    _lastShownAt = now;
-    _switches = 0;
-  }
-
-  void reset() => _switches = 0;
 }

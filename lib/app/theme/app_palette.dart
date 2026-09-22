@@ -121,8 +121,9 @@ class AppPalette extends ThemeExtension<AppPalette> {
     end: Alignment.bottomLeft,
   );
 
+  /// لون الصفحة الرئيسية (الإرسال): وردي-توتي حيوي، مختلف عن باقي الأقسام
   static const LinearGradient _blueFill = LinearGradient(
-    colors: [Color(0xFF0B78F0), Color(0xFF0B78F0)],
+    colors: [Color(0xFFE0247A), Color(0xFFE0247A)],
   );
   static const LinearGradient _mintFill = LinearGradient(
     colors: [Color(0xFF00947F), Color(0xFF00947F)],
@@ -135,8 +136,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
   );
 
   static const AccentColors _sendLight = AccentColors(
-    color: Color(0xFF0B78F0),
-    soft: Color(0xFFDCEBFF),
+    color: Color(0xFFE0247A),
+    soft: Color(0xFFFCE1EE),
     gradient: _blueFill,
   );
   static const AccentColors _contactsLight = AccentColors(
@@ -156,8 +157,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
   );
 
   static const AccentColors _sendDark = AccentColors(
-    color: Color(0xFF5BA8FF),
-    soft: Color(0xFF12304F),
+    color: Color(0xFFFF7FB4),
+    soft: Color(0xFF421B2E),
     gradient: _blueFill,
   );
   static const AccentColors _contactsDark = AccentColors(

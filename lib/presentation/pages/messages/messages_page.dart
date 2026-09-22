@@ -179,26 +179,45 @@ class _MessagesPageState extends State<MessagesPage> {
         ],
         if (all.isEmpty)
           SliverFillRemaining(
-            hasScrollBody: false,
+            hasScrollBody: true,
             child: Center(
-              child: EmptyState(
-                icon: Icons.chat_bubble_outline_rounded,
-                title: AppStrings.noMessages,
-                subtitle:
-                    'احفظ رسائلك المتكررة مرة واحدة، ثم أرسلها لأي شخص بضغطة.',
-                actionLabel: AppStrings.addMessage,
-                onAction: () => showMessageForm(context),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    EmptyState(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      title: AppStrings.noMessages,
+                      subtitle:
+                          'احفظ رسائلك المتكررة مرة واحدة، ثم أرسلها لأي شخص بضغطة.',
+                      actionLabel: AppStrings.addMessage,
+                      onAction: () => showMessageForm(context),
+                    ),
+                    // إعلان بعيد عن زر الإضافة حتى لا يُضغط بالخطأ
+                    const SizedBox(height: AppSpace.xl),
+                    const AdBanner(),
+                  ],
+                ),
               ),
             ),
           )
         else if (messages.isEmpty)
-          const SliverFillRemaining(
-            hasScrollBody: false,
+          SliverFillRemaining(
+            hasScrollBody: true,
             child: Center(
-              child: EmptyState(
-                icon: Icons.search_off_rounded,
-                title: 'لا توجد نتائج',
-                subtitle: 'جرّب كلمات بحث أو تصنيفاً مختلفاً.',
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    EmptyState(
+                      icon: Icons.search_off_rounded,
+                      title: 'لا توجد نتائج',
+                      subtitle: 'جرّب كلمات بحث أو تصنيفاً مختلفاً.',
+                    ),
+                    SizedBox(height: AppSpace.xl),
+                    AdBanner(),
+                  ],
+                ),
               ),
             ),
           )

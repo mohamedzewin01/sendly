@@ -155,25 +155,45 @@ class _ContactsPageState extends State<ContactsPage> {
           ),
         if (all.isEmpty)
           SliverFillRemaining(
-            hasScrollBody: false,
+            hasScrollBody: true,
             child: Center(
-              child: EmptyState(
-                icon: Icons.contacts_rounded,
-                title: AppStrings.noContacts,
-                subtitle: 'أضف جهات الاتصال ليصبح الإرسال إليها بضغطة واحدة.',
-                actionLabel: AppStrings.addContact,
-                onAction: () => showContactForm(context),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    EmptyState(
+                      icon: Icons.contacts_rounded,
+                      title: AppStrings.noContacts,
+                      subtitle:
+                          'أضف جهات الاتصال ليصبح الإرسال إليها بضغطة واحدة.',
+                      actionLabel: AppStrings.addContact,
+                      onAction: () => showContactForm(context),
+                    ),
+                    // إعلان بعيد عن زر الإضافة حتى لا يُضغط بالخطأ
+                    const SizedBox(height: AppSpace.xl),
+                    const AdBanner(),
+                  ],
+                ),
               ),
             ),
           )
         else if (contacts.isEmpty)
-          const SliverFillRemaining(
-            hasScrollBody: false,
+          SliverFillRemaining(
+            hasScrollBody: true,
             child: Center(
-              child: EmptyState(
-                icon: Icons.search_off_rounded,
-                title: 'لا توجد نتائج',
-                subtitle: 'جرّب كلمات بحث مختلفة.',
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    EmptyState(
+                      icon: Icons.search_off_rounded,
+                      title: 'لا توجد نتائج',
+                      subtitle: 'جرّب كلمات بحث مختلفة.',
+                    ),
+                    SizedBox(height: AppSpace.xl),
+                    AdBanner(),
+                  ],
+                ),
               ),
             ),
           )

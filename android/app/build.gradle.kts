@@ -38,8 +38,8 @@ android {
             // بدون key.properties يُوقَّع بمفتاح الـ debug (لا يصلح للرفع على المتجر)
             signingConfig = signingConfigs.findByName("release")
                 ?: signingConfigs.getByName("debug")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -57,6 +57,8 @@ android {
         applicationId = "com.mnrra.sandlyn"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // نُبقي أدنى إصدار مطابقاً للإصدار المنشور سابقاً (23) حتى لا نستبعد أجهزة تعمل عليه حالياً.
+        // نرفعه فقط إن رفضت إحدى الحزم (راجع رسالة الخطأ من Gradle إن ظهرت).
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

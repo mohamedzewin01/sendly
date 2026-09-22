@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -15,8 +13,8 @@ Future<void> showAdFreeSheet(BuildContext context) {
   return showAppSheet<void>(context, builder: (_) => const _AdFreeSheet());
 }
 
-/// عرض إعلان بمكافأة عند أول دخول للإعدادات: شاشة تمهيدية بعدّاد 5 ثوانٍ وزر «لا شكراً»
-/// (النمط الذي تشترطه Google للإعلانات البينية بمكافأة)، ثم الإعلان إن لم يرفض المستخدم.
+/// عرض اختياري لإعلان بمكافأة عند أول دخول للإعدادات في الجلسة. لا يبدأ أي إعلان إلا
+/// بضغطة صريحة على «شاهد الإعلان»؛ «لا شكراً» أو الضغط خارج النافذة يرفضان دون أي أثر.
 Future<void> offerRewardIntro(BuildContext context) async {
   final go = await showDialog<bool>(
     context: context,
@@ -34,38 +32,8 @@ Future<void> offerRewardIntro(BuildContext context) async {
   );
 }
 
-class _RewardIntroDialog extends StatefulWidget {
+class _RewardIntroDialog extends StatelessWidget {
   const _RewardIntroDialog();
-
-  @override
-  State<_RewardIntroDialog> createState() => _RewardIntroDialogState();
-}
-
-class _RewardIntroDialogState extends State<_RewardIntroDialog> {
-  static const int _seconds = 5;
-
-  late int _left = _seconds;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return;
-      if (_left <= 1) {
-        t.cancel();
-        Navigator.of(context).pop(true);
-        return;
-      }
-      setState(() => _left--);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,23 +43,11 @@ class _RewardIntroDialogState extends State<_RewardIntroDialog> {
     return AlertDialog(
       icon: Icon(Icons.visibility_off_rounded, color: p.primary, size: 30),
       title: Text('أخفِ الإعلانات ${arabicDurationLabel(duration)}'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'شاهد إعلاناً واحداً وتختفي الإعلانات من التطبيق ${arabicDurationLabel(duration)}.',
-            textAlign: TextAlign.center,
-            style: context.text.bodyMedium?.copyWith(color: p.inkSoft),
-          ),
-          const SizedBox(height: AppSpace.l),
-          Text(
-            'يبدأ الإعلان خلال $_left',
-            style: context.text.labelLarge?.copyWith(
-              color: p.primary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
+      content: Text(
+        'اضغط «شاهد الإعلان» لتشاهد إعلاناً واحداً، وبعدها تختفي الإعلانات من '
+        'التطبيق ${arabicDurationLabel(duration)}. الأمر اختياري تماماً.',
+        textAlign: TextAlign.center,
+        style: context.text.bodyMedium?.copyWith(color: p.inkSoft),
       ),
       actionsAlignment: MainAxisAlignment.center,
       actions: [
@@ -101,7 +57,7 @@ class _RewardIntroDialogState extends State<_RewardIntroDialog> {
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('شاهد الآن'),
+          child: const Text('شاهد الإعلان'),
         ),
       ],
     );

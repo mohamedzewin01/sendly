@@ -70,10 +70,6 @@ class _MainPageState extends State<MainPage>
 
   static const int _settingsIndex = 3;
 
-  /// الغياب بهذه المدة أو أكثر ثم العودة يُعدّ فتحاً جديداً للتطبيق
-  static const Duration _newSessionAfter = Duration(minutes: 10);
-  DateTime? _pausedAt;
-
   /// أثناء التحديث الإجباري لا نتجاوز شاشة التحديث بسبب مشاركة قادمة
   bool _forceUpdateOpen = false;
 
@@ -117,15 +113,7 @@ class _MainPageState extends State<MainPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      _pausedAt = DateTime.now();
-    } else if (state == AppLifecycleState.resumed) {
-      // غاب المستخدم فترة ثم عاد: نعدّه فتحاً جديداً للتطبيق فيعود عرض المكافأة عند دخول الإعدادات
-      final away = _pausedAt;
-      _pausedAt = null;
-      if (away != null && DateTime.now().difference(away) >= _newSessionAfter) {
-        AdsService.instance.startNewSession();
-      }
+    if (state == AppLifecycleState.resumed) {
       // العودة من تطبيق المراسلة بعد الإرسال: نقطة انتقال طبيعية لإعلان بيني
       AdsService.instance.showInterstitialIfDue();
     }
@@ -146,15 +134,15 @@ class _MainPageState extends State<MainPage>
     setState(() => _index = index);
     _enter.forward(from: 0);
 
-    final ads = AdsService.instance;
-    if (index == _settingsIndex && ads.shouldOfferRewardOnSettings) {
-      // أول دخول للإعدادات في هذه الجلسة: عرض إعلان بمكافأة (بشاشة تمهيدية وخيار الرفض)
-      ads.markSettingsPromptShown();
-      Future<void>.delayed(const Duration(milliseconds: 350), () {
-        if (mounted) offerRewardIntro(context);
-      });
-    } else {
-      ads.onTabSwitched();
+    if (index == _settingsIndex) {
+      final ads = AdsService.instance;
+      if (ads.shouldOfferRewardOnSettings) {
+        // عرض اختياري لإعلان بمكافأة عند دخول الإعدادات (بحوار صريح وخيار الرفض)
+        ads.markSettingsPromptShown();
+        Future<void>.delayed(const Duration(milliseconds: 350), () {
+          if (mounted) offerRewardIntro(context);
+        });
+      }
     }
   }
 
